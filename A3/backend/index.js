@@ -31,7 +31,16 @@ const { testLog } = require("./middleware/testLog");
 const multer = require("multer");
 const path = require("path");
 const express = require("express");
+const cors = require('cors');
 const app = express();
+
+// Add CORS configuration here
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 app.use(express.json());
 app.use((req, res, next) => {

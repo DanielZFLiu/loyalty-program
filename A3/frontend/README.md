@@ -52,3 +52,10 @@ export default tseslint.config({
   },
 })
 ```
+
+## Setup Instructions
+
+To seed the database: npx prisma db seed
+
+To start the frontend: npm run dev
+To strat the backend: node index.js 3000
