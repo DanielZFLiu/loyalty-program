@@ -122,11 +122,11 @@ async function listEvents(req, res) {
   const now = new Date();
   let where = {};
   if (name) {
-    where.name = { contains: name, mode: "insensitive" };
+    where.name = { contains: name };
   }
 
   if (location) {
-    where.location = { contains: location, mode: "insensitive" };
+    where.location = { contains: location };
   }
 
   if (started != null) {

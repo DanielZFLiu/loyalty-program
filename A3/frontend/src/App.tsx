@@ -4,6 +4,8 @@ import { Points } from './pages/Points';
 import { Transactions } from './pages/Transactions';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
+import { Events } from './pages/Events';
+import { EventDetails } from './pages/EventDetails';
 import { useState, useEffect } from 'react';
 import { api } from './lib/api';
 
@@ -71,6 +73,14 @@ function App() {
             <Route
               path="/transactions"
               element={user ? <Transactions /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/events"
+              element={user ? <Events /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/events/:eventId"
+              element={user ? <EventDetails /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/profile"
