@@ -12,7 +12,7 @@ interface ProfileUpdateData {
   avatar?: File;
 }
 
-export async function apiRequest(endpoint: string, options: RequestInit = {}) {
+export async function fetchWrapper(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
   const tokenExpiresAt = localStorage.getItem('tokenExpiresAt');
 
@@ -24,8 +24,12 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     throw new Error('Token expired');
   }
 
+  // If the body is FormData, don't set the Content-Type header
+  const isFormData = options.body instanceof FormData;
+  const defaultHeaders: HeadersInit = isFormData ? {} : { "Content-Type": "application/json" };
+
   const headers = {
-    'Content-Type': 'application/json',
+    ...defaultHeaders,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
@@ -36,7 +40,12 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   });
 
   if (!response.ok) {
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error(response.statusText || 'API request failed');
+    }
     throw new Error(data.error || 'API request failed');
   }
 
@@ -47,33 +56,33 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
 export const api = {
   // Auth
   login: (utorid: string, password: string): Promise<LoginResponse> =>
-    apiRequest('/auth/tokens', {
+    fetchWrapper('/auth/tokens', {
       method: 'POST',
       body: JSON.stringify({ utorid, password }),
     }),
 
   // User
-  getCurrentUser: () => apiRequest('/users/me'),
+  getCurrentUser: () => fetchWrapper('/users/me'),
   updateProfile: (data: ProfileUpdateData) =>
-    apiRequest('/users/me', {
+    fetchWrapper('/users/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
   updatePassword: (oldPassword: string, newPassword: string) =>
-    apiRequest('/users/me/password', {
+    fetchWrapper('/users/me/password', {
       method: 'PATCH',
       body: JSON.stringify({ old: oldPassword, new: newPassword }),
     }),
 
   // Points
-  getPoints: () => apiRequest('/points'),
+  getPoints: () => fetchWrapper('/points'),
 
   // Transactions
   getTransactions: (params?: Record<string, string>) => {
     const queryString = params
       ? '?' + new URLSearchParams(params).toString()
       : '';
-    return apiRequest(`/transactions${queryString}`);
+    return fetchWrapper(`/transactions${queryString}`);
   },
 
   // Logout

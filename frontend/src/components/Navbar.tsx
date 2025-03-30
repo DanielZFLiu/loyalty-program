@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { api } from '../lib/api';
+import { api } from '../lib/api/fetchWrapper';
 
 interface NavbarProps {
   user: {
