@@ -33,11 +33,12 @@ const path = require("path");
 const express = require("express");
 const cors = require('cors');
 const app = express();
+const fs = require('fs');
 
 // Add CORS configuration here
 app.use(cors({
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
@@ -48,6 +49,20 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve static files from the uploads directory
+const uploadDir = path.join(__dirname, "uploads");
+const avatarDir = path.join(uploadDir, "avatars");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+if (!fs.existsSync(avatarDir)) {
+  fs.mkdirSync(avatarDir);
+}
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 // #region user routes
 app.post("/users", authenticate, requireAuth("CASHIER"), user.registerUser);
 app.get("/users", authenticate, requireAuth("MANAGER"), user.listUsers);
@@ -56,7 +71,17 @@ app.all("/users", (_req, res) => {
 });
 
 const upload = multer({
-  dest: path.join(__dirname, "uploads/avatars"),
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, avatarDir);
+    },
+    filename: function (req, file, cb) {
+      // Create a unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueSuffix + ext);
+    }
+  })
 });
 
 app.get("/users/me", authenticate, requireAuth("REGULAR"), userMe.getMe);

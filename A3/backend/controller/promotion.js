@@ -112,7 +112,7 @@ async function getPromotions(req, res) {
   let where = {};
   // common filters
   if (name) {
-    where.name = { contains: name, mode: "insensitive" };
+    where.name = { contains: name };
   }
   if (type) {
     if (type === "automatic") {

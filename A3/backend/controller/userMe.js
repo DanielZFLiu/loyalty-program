@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const uuid = require('uuid');
+const fs = require('fs');
 
 /**
  * retrieve current user info
@@ -60,15 +61,24 @@ async function updateMe(req, res) {
     if (name == null && email == null && birthday == null && !req.file) {
         return res.status(400).json({ error: 'Empty payload: at least one field must be provided' });
     }
+    const updateData = {};
 
     // process uploaded file
     if (req.file) {
-        // assume file is stored in uploads/avatars
+        // Check if the file was saved correctly
+        const filePath = req.file.path;
+        if (!fs.existsSync(filePath)) {
+            console.error("File was not saved to disk:", filePath);
+        } else {
+            console.log("File was successfully saved to disk:", filePath);
+        }
+        
+        // Set the correct URL path
         avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        console.log("Set avatarUrl:", avatarUrl);
         updateData.avatarUrl = avatarUrl;
     }
 
-    const updateData = {};
 
     if (name != null) {
         if (typeof name !== 'string' || name.length < 1 || name.length > 50) {

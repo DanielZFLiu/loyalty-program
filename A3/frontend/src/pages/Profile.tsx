@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 interface UserProfile {
   id: number;
@@ -42,6 +43,7 @@ export function Profile() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { user: contextUser, setUser, updateUserAvatar } = useUser();
 
   useEffect(() => {
     fetchProfile();
@@ -63,6 +65,7 @@ export function Profile() {
       
       const data = await response.json();
       setProfile(data);
+      setUser(data); // Update context
       
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -103,7 +106,7 @@ export function Profile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+  
     try {
       const token = localStorage.getItem('token');
       const formDataToSend = new FormData();
@@ -116,37 +119,35 @@ export function Profile() {
       // Add avatar file if selected
       if (avatarFile) {
         formDataToSend.append('avatar', avatarFile);
+        console.log("Added file to form data:", avatarFile.name);
       }
-
-      // Determine if we need to use FormData or JSON
-      const headers: HeadersInit = {
-        Authorization: `Bearer ${token}`,
-      };
-      
-      let body: FormData | string;
-      
-      // If we have a file, use FormData, otherwise use JSON
-      if (avatarFile) {
-        body = formDataToSend;
-      } else {
-        headers['Content-Type'] = 'application/json';
-        body = JSON.stringify(formData);
-      }
-
+  
+      // Do NOT set Content-Type header when sending FormData
+      // The browser will automatically set the correct multipart/form-data content type
       const response = await fetch('http://localhost:3000/users/me', {
         method: 'PATCH',
-        headers,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         credentials: 'include',
-        body,
+        body: avatarFile ? formDataToSend : JSON.stringify(formData),
       });
-
+  
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to update profile');
       }
-
+  
       const updatedProfile = await response.json();
+      console.log("Updated profile received:", updatedProfile);
       setProfile(updatedProfile);
+      setUser(updatedProfile); // Update context with full profile
+      
+      // If avatar was updated
+      if (avatarFile && updatedProfile.avatarUrl) {
+        updateUserAvatar(updatedProfile.avatarUrl); // Update avatar specifically
+      }
+      
       setIsEditing(false);
       setFormData({});
       setAvatarFile(null);
@@ -155,7 +156,6 @@ export function Profile() {
       setError(error instanceof Error ? error.message : 'Failed to update profile');
     }
   };
-
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
@@ -236,7 +236,9 @@ export function Profile() {
                   />
                 ) : profile.avatarUrl ? (
                   <img 
-                    src={`http://localhost:3000${profile.avatarUrl}`} 
+                    src={profile.avatarUrl.startsWith('http') 
+                      ? profile.avatarUrl 
+                      : `http://localhost:3000${profile.avatarUrl}`} 
                     alt="User Avatar" 
                     className="w-full h-full object-cover" 
                   />
