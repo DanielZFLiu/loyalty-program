@@ -36,7 +36,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
           </Link>
           {user && (
             <>
-              <Link to="/points" className="text-sm font-medium">
+              <Link to="/dashboard" className="text-sm font-medium">
                 Dashboard
               </Link>
               <Link to="/transactions" className="text-sm font-medium">
@@ -47,6 +47,9 @@ export function Navbar({ user, onLogout }: NavbarProps) {
               </Link>
               <Link to="/events" className="text-sm font-medium">
                 Events
+              </Link>
+              <Link to="/redeem" className="text-sm font-medium">
+                Redeem Points
               </Link>
             </>
           )}
@@ -86,4 +89,4 @@ export function Navbar({ user, onLogout }: NavbarProps) {
       </div>
     </nav>
   );
-} 
+}

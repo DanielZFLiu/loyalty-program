@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { Points } from './pages/Points';
+import { Dashboard } from './pages/Dashboard';
 import { Transactions } from './pages/Transactions';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
 import { Events } from './pages/Events';
 import { EventDetails } from './pages/EventDetails';
+import { RedemptionPage } from './pages/RedemptionPage';
+import { Promotions } from './pages/Promotions';
 import { useState, useEffect } from 'react';
 import { api } from './lib/api';
 
@@ -60,15 +62,15 @@ function App() {
               path="/"
               element={
                 user ? (
-                  <Navigate to="/points" replace />
+                  <Navigate to="/dashboard" replace />
                 ) : (
                   <Navigate to="/login" replace />
                 )
               }
             />
             <Route
-              path="/points"
-              element={user ? <Points /> : <Navigate to="/login" replace />}
+              path="/dashboard"
+              element={user ? <Dashboard /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/transactions"
@@ -83,6 +85,14 @@ function App() {
               element={user ? <EventDetails /> : <Navigate to="/login" replace />}
             />
             <Route
+              path="/promotions"
+              element={user ? <Promotions /> : <Navigate to="/login" replace />}
+            />
+            <Route path="/redeem" 
+              element={user ? <RedemptionPage /> : <Navigate to="/login" replace />} 
+            />
+
+            <Route
               path="/profile"
               element={user ? <Profile /> : <Navigate to="/login" replace />}
             />
@@ -90,7 +100,7 @@ function App() {
               path="/login"
               element={
                 user ? (
-                  <Navigate to="/points" replace />
+                  <Navigate to="/dashboard" replace />
                 ) : (
                   <Login />
                 )

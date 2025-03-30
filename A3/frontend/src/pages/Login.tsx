@@ -21,7 +21,7 @@ export function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('tokenExpiresAt', data.expiresAt);
       
-      navigate('/points');
+      navigate('/dashboard');
       window.location.reload();
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Login failed');
