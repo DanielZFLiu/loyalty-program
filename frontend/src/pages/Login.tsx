@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { api } from '../lib/api';
+import {login} from '@/lib/api/auth';
 
 export function Login() {
   const [utorid, setUtorid] = useState('');
@@ -17,7 +17,7 @@ export function Login() {
     setError('');
 
     try {
-      const data = await api.login(utorid, password);
+      const data = await login(utorid, password);
       localStorage.setItem('token', data.token);
       localStorage.setItem('tokenExpiresAt', data.expiresAt);
       

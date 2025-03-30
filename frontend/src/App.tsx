@@ -9,7 +9,7 @@ import { EventDetails } from './pages/EventDetails';
 import { RedemptionPage } from './pages/RedemptionPage';
 import { Promotions } from './pages/Promotions';
 import { useState, useEffect } from 'react';
-import { api } from './lib/api';
+import { api } from './lib/api/fetchWrapper';
 import { UserProvider } from './contexts/UserContext';
 
 interface User {
@@ -55,63 +55,63 @@ function App() {
 
   return (
     <UserProvider>
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        {user && <Navbar user={user} onLogout={handleLogout} />}
-        <main>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                user ? (
-                  <Navigate to="/dashboard" replace />
-                ) : (
-                  <Navigate to="/login" replace />
-                )
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={user ? <Dashboard /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/transactions"
-              element={user ? <Transactions /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/events"
-              element={user ? <Events /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/events/:eventId"
-              element={user ? <EventDetails /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/promotions"
-              element={user ? <Promotions /> : <Navigate to="/login" replace />}
-            />
-            <Route path="/redeem" 
-              element={user ? <RedemptionPage /> : <Navigate to="/login" replace />} 
-            />
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          {user && <Navbar user={user} onLogout={handleLogout} />}
+          <main>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  user ? (
+                    <Navigate to="/dashboard" replace />
+                  ) : (
+                    <Navigate to="/login" replace />
+                  )
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={user ? <Dashboard /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/transactions"
+                element={user ? <Transactions /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/events"
+                element={user ? <Events /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/events/:eventId"
+                element={user ? <EventDetails /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/promotions"
+                element={user ? <Promotions /> : <Navigate to="/login" replace />}
+              />
+              <Route path="/redeem"
+                element={user ? <RedemptionPage /> : <Navigate to="/login" replace />}
+              />
 
-            <Route
-              path="/profile"
-              element={user ? <Profile /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/login"
-              element={
-                user ? (
-                  <Navigate to="/dashboard" replace />
-                ) : (
-                  <Login />
-                )
-              }
-            />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+              <Route
+                path="/profile"
+                element={user ? <Profile /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/login"
+                element={
+                  user ? (
+                    <Navigate to="/dashboard" replace />
+                  ) : (
+                    <Login />
+                  )
+                }
+              />
+            </Routes>
+          </main>
+        </div>
+      </Router>
     </UserProvider>
   );
 }

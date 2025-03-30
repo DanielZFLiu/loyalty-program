@@ -56,14 +56,14 @@ export function Dashboard() {
           Authorization: `Bearer ${token}`,
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch profile');
       }
-      
+
       const data = await response.json();
       setProfile(data);
-      
+
       // Create QR code value containing user ID and UserId
       const qrData = JSON.stringify({
         type: 'user',
@@ -71,7 +71,7 @@ export function Dashboard() {
         utorid: data.utorid,
         timestamp: new Date().toISOString()
       });
-      
+
       setQrValue(qrData);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -101,7 +101,7 @@ export function Dashboard() {
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
       }
-      
+
       const data = await response.json();
       setRecentTransactions(data.results);
     } catch (error) {
@@ -150,11 +150,11 @@ export function Dashboard() {
           remark: transferRemark || undefined
         }),
       });
-      
+
       // Check if response is not OK
       if (!response.ok) {
         const contentType = response.headers.get('content-type');
-        
+
         // Attempt to parse JSON only if response is JSON
         let errorMessage = 'An unexpected error occurred';
         if (contentType && contentType.includes('application/json')) {
@@ -163,23 +163,23 @@ export function Dashboard() {
         } else {
           errorMessage = `Server responded with status ${response.status}: ${response.statusText}`;
         }
-    
+
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      
+
       // Refresh profile to get updated points balance
       await fetchProfile();
-      
+
       setTransferSuccess(`Successfully transferred ${amount} points`);
       setTransferUserId('');
       setTransferAmount('');
       setTransferRemark('');
-      
+
       // Refresh transactions
       fetchRecentTransactions();
-      
+
       // Auto-dismiss success message after a few seconds
       setTimeout(() => {
         setTransferSuccess('');
@@ -236,7 +236,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <div className="border-4 border-white p-4 rounded-lg shadow-md bg-white mb-4">
-              <QRCodeSVG 
+              <QRCodeSVG
                 value={qrValue}
                 size={180}
                 level="H"
