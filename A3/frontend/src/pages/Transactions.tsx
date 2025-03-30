@@ -141,9 +141,6 @@ export function Transactions() {
                       {transaction.amount >= 0 ? '+' : ''}
                       {transaction.amount} points
                     </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleDateString()}
-                    </p>
                   </div>
                 </div>
               </CardContent>

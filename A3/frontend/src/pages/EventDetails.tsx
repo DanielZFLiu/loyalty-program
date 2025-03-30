@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Alert, AlertDescription } from '../components/ui/alert';
 
 interface EventDetail {
   id: number;
@@ -30,6 +31,58 @@ export function EventDetails() {
   const [error, setError] = useState<string | null>(null);
   const [rsvpStatus, setRsvpStatus] = useState<boolean>(false);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Function to check RSVP status by attempting to RSVP
+  const checkRsvpStatus = async (token: string) => {
+    try {
+      // Try to RSVP - if we get a 400, it means we're already RSVP'd
+      const rsvpCheckResponse = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (rsvpCheckResponse.status === 400) {
+        // 400 means already RSVP'd
+        setRsvpStatus(true);
+        return;
+      } else if (rsvpCheckResponse.status === 201) {
+        // Successfully RSVP'd, but we were checking status
+        // Update the event data
+        const data = await rsvpCheckResponse.json();
+        setEvent(prev => prev ? {...prev, numGuests: data.numGuests} : null);
+        
+        // Now cancel this RSVP since we were just checking
+        const cancelResponse = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (cancelResponse.ok) {
+          // Successfully canceled the test RSVP
+          setRsvpStatus(false);
+        } else {
+          // If we couldn't cancel, leave it as RSVP'd
+          setRsvpStatus(true);
+        }
+      } else {
+        // Any other response means not RSVP'd
+        setRsvpStatus(false);
+      }
+    } catch (error) {
+      console.error('Error checking RSVP status:', error);
+      // If we can't check, assume not RSVP'd
+      setRsvpStatus(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -72,18 +125,8 @@ export function EventDetails() {
         const eventData = await response.json();
         setEvent(eventData);
 
-        // Check if user has RSVP'd
-        const rsvpCheckResponse = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        // If status is 200, user has RSVP'd, if 404, user has not RSVP'd
-        setRsvpStatus(rsvpCheckResponse.status === 200);
+        // Now try to RSVP to see if we're already registered
+        await checkRsvpStatus(token);
       } catch (error) {
         console.error('Error fetching event details:', error);
         setError('Failed to load event details. Please try again later.');
@@ -97,6 +140,9 @@ export function EventDetails() {
 
   const handleRsvp = async () => {
     setRsvpLoading(true);
+    setError(null);
+    setStatusMessage(null);
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -125,7 +171,9 @@ export function EventDetails() {
       }
 
       if (response.status === 400) {
-        setError('You have already RSVP\'d to this event.');
+        // Already RSVP'd
+        setRsvpStatus(true);
+        setStatusMessage("You've already RSVP'd to this event!");
         return;
       }
 
@@ -137,7 +185,7 @@ export function EventDetails() {
       // Update the event with new guest count
       setEvent(prev => prev ? {...prev, numGuests: data.numGuests} : null);
       setRsvpStatus(true);
-      setError(null);
+      setStatusMessage("You've successfully RSVP'd to this event!");
     } catch (error) {
       console.error('Error RSVPing to event:', error);
       setError('Failed to RSVP. Please try again later.');
@@ -148,6 +196,9 @@ export function EventDetails() {
 
   const handleCancelRsvp = async () => {
     setRsvpLoading(true);
+    setError(null);
+    setStatusMessage(null);
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -176,7 +227,9 @@ export function EventDetails() {
       }
 
       if (response.status === 404) {
-        setError('You have not RSVP\'d to this event.');
+        // Not RSVP'd
+        setRsvpStatus(false);
+        setStatusMessage("You haven't RSVP'd to this event yet.");
         return;
       }
 
@@ -187,7 +240,7 @@ export function EventDetails() {
       // Update the event with reduced guest count
       setEvent(prev => prev ? {...prev, numGuests: prev.numGuests - 1} : null);
       setRsvpStatus(false);
-      setError(null);
+      setStatusMessage("Your RSVP has been cancelled.");
     } catch (error) {
       console.error('Error canceling RSVP:', error);
       setError('Failed to cancel RSVP. Please try again later.');
@@ -276,9 +329,15 @@ export function EventDetails() {
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <div className="bg-red-100 text-red-800 p-3 rounded-md">
-              {error}
-            </div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {statusMessage && (
+            <Alert variant="default" className="mb-4 bg-green-50 text-green-800 border-green-200">
+              <AlertDescription>{statusMessage}</AlertDescription>
+            </Alert>
           )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

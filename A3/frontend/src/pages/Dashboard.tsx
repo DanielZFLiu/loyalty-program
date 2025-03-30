@@ -29,8 +29,9 @@ export function Dashboard() {
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [transferUtorid, setTransferUtorid] = useState('');
+  const [transferUserId, setTransferUserId] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
+  const [transferRemark, setTransferRemark] = useState('');
   const [transferError, setTransferError] = useState('');
   const [transferSuccess, setTransferSuccess] = useState('');
   const [qrValue, setQrValue] = useState('');
@@ -63,8 +64,9 @@ export function Dashboard() {
       const data = await response.json();
       setProfile(data);
       
-      // Create QR code value containing user ID and UTORid
+      // Create QR code value containing user ID and UserId
       const qrData = JSON.stringify({
+        type: 'user',
         userId: data.id,
         utorid: data.utorid,
         timestamp: new Date().toISOString()
@@ -114,19 +116,28 @@ export function Dashboard() {
     setTransferSuccess('');
 
     try {
-      if (!transferUtorid.trim()) {
-        setTransferError('Please enter a UTORid');
+      // Validate recipient
+      if (!transferUserId.trim()) {
+        setTransferError('Please enter a User Id');
         return;
       }
 
+      // Validate amount
       const amount = parseInt(transferAmount);
       if (isNaN(amount) || amount <= 0) {
-        setTransferError('Please enter a valid amount');
+        setTransferError('Please enter a valid amount greater than 0');
         return;
       }
 
+      // Prevent transferring to yourself
+      if (profile && Number(transferUserId) === profile.id) {
+        setTransferError('You cannot transfer points to yourself');
+        return;
+      }
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/users/me/transfer', {
+      const recipientId = Number(transferUserId);
+      // Now make the transfer using the correct API endpoint
+      const response = await fetch(`http://localhost:3000/users/${recipientId}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,24 +145,45 @@ export function Dashboard() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          recipientUtorid: transferUtorid,
+          type: 'transfer',
           amount: amount,
+          remark: transferRemark || undefined
         }),
       });
-
+      
+      // Check if response is not OK
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to transfer points');
+        const contentType = response.headers.get('content-type');
+        
+        // Attempt to parse JSON only if response is JSON
+        let errorMessage = 'An unexpected error occurred';
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+        } else {
+          errorMessage = `Server responded with status ${response.status}: ${response.statusText}`;
+        }
+    
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      setProfile(prev => prev ? { ...prev, points: data.newBalance } : null);
-      setTransferSuccess(`Successfully transferred ${amount} points to ${transferUtorid}`);
-      setTransferUtorid('');
+      
+      // Refresh profile to get updated points balance
+      await fetchProfile();
+      
+      setTransferSuccess(`Successfully transferred ${amount} points`);
+      setTransferUserId('');
       setTransferAmount('');
+      setTransferRemark('');
       
       // Refresh transactions
       fetchRecentTransactions();
+      
+      // Auto-dismiss success message after a few seconds
+      setTimeout(() => {
+        setTransferSuccess('');
+      }, 5000);
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'Failed to transfer points');
     }
@@ -204,16 +236,12 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <div className="border-4 border-white p-4 rounded-lg shadow-md bg-white mb-4">
-            <QRCodeSVG 
-              value={qrValue}
-              size={180}
-              level="H"
-              includeMargin={true}
-            />
+              <QRCodeSVG 
+                value={qrValue}
+                size={180}
+                level="H"
+              />
             </div>
-            <p className="text-sm text-center text-gray-500">
-              Scan to identify as {profile?.name} ({profile?.utorid})
-            </p>
           </CardContent>
         </Card>
 
@@ -226,12 +254,12 @@ export function Dashboard() {
           <CardContent>
             <form onSubmit={handleTransfer} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="recipientUtorid">Recipient UTORid</Label>
+                <Label htmlFor="recipientUserId">Recipient User ID</Label>
                 <Input
-                  id="recipientUtorid"
-                  value={transferUtorid}
-                  onChange={(e) => setTransferUtorid(e.target.value)}
-                  placeholder="Enter UTORid"
+                  id="recipientUserId"
+                  value={transferUserId}
+                  onChange={(e) => setTransferUserId(e.target.value)}
+                  placeholder="Enter UserId"
                 />
               </div>
               <div className="space-y-2">
@@ -245,8 +273,25 @@ export function Dashboard() {
                   min="1"
                 />
               </div>
-              {transferError && <p className="text-red-500 text-sm">{transferError}</p>}
-              {transferSuccess && <p className="text-green-500 text-sm">{transferSuccess}</p>}
+              <div className="space-y-2">
+                <Label htmlFor="remark">Remark (optional)</Label>
+                <Input
+                  id="remark"
+                  value={transferRemark}
+                  onChange={(e) => setTransferRemark(e.target.value)}
+                  placeholder="What's this transfer for?"
+                />
+              </div>
+              {transferError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                  {transferError}
+                </div>
+              )}
+              {transferSuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded text-green-600 text-sm">
+                  {transferSuccess}
+                </div>
+              )}
               <Button type="submit" className="w-full">Send Points</Button>
             </form>
           </CardContent>
