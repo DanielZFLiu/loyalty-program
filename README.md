@@ -10,7 +10,7 @@ node prisma/seed.js
 node index.js 3000
 ```
 
-Optionally, run `npx prisma studio` in another terminal after setting up to see the database with a more user friendly ui.
+Optionally, run `npx prisma studio` after setting up to see the database with a more user friendly ui.
 
 # Frontend
 Open another terminal. cd to the frontend folder, then run the following commands:
