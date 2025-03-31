@@ -1,35 +1,42 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+} from "../components/ui/select";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { getPromotions } from "@/lib/api/promotion";
+import type { GetPromotionsQuery, Promotion } from "@/lib/api/promotion";
 
 // Define enums to match your Prisma model
 enum PromotionType {
   AUTOMATIC = "automatic",
-  ONE_TIME = "one-time"
+  ONE_TIME = "one-time",
 }
 
 // Update interface to match your database model
-interface Promotion {
-  id: number;
-  name: string;
-  description: string;
-  type: PromotionType;
-  startTime: string;
-  endTime: string;
-  minSpending: number | null;
-  rate: number | null;
-  points: number;
-  createdAt: string;
-}
+// interface Promotion {
+//   id: number;
+//   name: string;
+//   description: string;
+//   type: PromotionType;
+//   startTime: string;
+//   endTime: string;
+//   minSpending: number | null;
+//   rate: number | null;
+//   points: number;
+//   createdAt: string;
+// }
 
 export function Promotions() {
   // Initialize state with empty array
@@ -38,11 +45,13 @@ export function Promotions() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Simplified filters
-  const [nameFilter, setNameFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  
+  const [nameFilter, setNameFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState<
+    "automatic" | "one-time" | undefined
+  >();
+
   // Add state for filter visibility
   const [showFilters, setShowFilters] = useState(false);
 
@@ -51,50 +60,28 @@ export function Promotions() {
     const fetchPromotions = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
+
+        const params: GetPromotionsQuery = {
+          page: page,
+          limit: 10,
+          name: nameFilter,
+          type: typeFilter,
+        };
         
-        // Build query parameters
-        const params = new URLSearchParams({
-          page: String(page),
-          limit: '10',
-        });
-        
-        if (nameFilter) {
-          params.append('name', nameFilter);
-        }
-        
-        if (typeFilter && typeFilter !== 'all') {
-          params.append('type', typeFilter);
-        }
-        
-        // Make API request
-        const response = await fetch(
-          `http://localhost:3000/promotions?${params.toString()}`,
-          {
-            credentials: 'include',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch promotions: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setPromotions(data.results);
-        setTotalPages(Math.ceil(data.count / 10));
+        const response = await getPromotions(params);
+
+        setPromotions(response.results);
+        setTotalPages(Math.ceil(response.count / 10));
         setError(null);
       } catch (err) {
-        console.error('Error fetching promotions:', err);
-        setError('Failed to load promotions. Please try again later.');
+        console.error("Error fetching promotions:", err);
+        setError("Failed to load promotions. Please try again later.");
         setPromotions([]);
       } finally {
         setLoading(false);
       }
     };
-    
+
     // Call the fetch function
     fetchPromotions();
   }, [page, nameFilter, typeFilter]);
@@ -104,9 +91,13 @@ export function Promotions() {
     setNameFilter(e.target.value);
     setPage(1); // Reset to first page
   };
-  
+
   const handleTypeFilterChange = (value: string) => {
-    setTypeFilter(value);
+    if (value === "automatic" || value === "one-time") {
+      setTypeFilter(value);
+    } else if (value === "undefined") {
+      setTypeFilter(undefined);
+    }
     setPage(1); // Reset to first page
   };
 
@@ -143,7 +134,10 @@ export function Promotions() {
           {showFilters && (
             <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label htmlFor="name-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="name-filter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Filter by Name
                 </label>
                 <Input
@@ -155,7 +149,10 @@ export function Promotions() {
                 />
               </div>
               <div>
-                <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="type-filter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Filter by Type
                 </label>
                 <Select
@@ -166,7 +163,7 @@ export function Promotions() {
                     <SelectValue placeholder="Select Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="undefined">All Types</SelectItem>
                     <SelectItem value="automatic">Automatic</SelectItem>
                     <SelectItem value="one-time">One-time</SelectItem>
                   </SelectContent>
@@ -176,8 +173,12 @@ export function Promotions() {
           )}
 
           {/* Loading and error states */}
-          {loading && <div className="text-center py-8">Loading promotions...</div>}
-          {error && <div className="text-center py-8 text-red-500">{error}</div>}
+          {loading && (
+            <div className="text-center py-8">Loading promotions...</div>
+          )}
+          {error && (
+            <div className="text-center py-8 text-red-500">{error}</div>
+          )}
 
           {/* Promotions list */}
           {!loading && !error && (
@@ -190,12 +191,14 @@ export function Promotions() {
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                           <div>
                             <div className="flex items-center space-x-2">
-                              <h3 className="text-lg font-semibold">{promotion.name}</h3>
+                              <h3 className="text-lg font-semibold">
+                                {promotion.name}
+                              </h3>
                               <span
                                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
                                   promotion.type === PromotionType.AUTOMATIC
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-purple-100 text-purple-800'
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-purple-100 text-purple-800"
                                 }`}
                               >
                                 {promotion.type}
@@ -204,11 +207,15 @@ export function Promotions() {
                             <div className="mt-2 space-y-1">
                               {promotion.minSpending && (
                                 <p className="text-sm text-gray-600">
-                                  Min Spending: ${promotion.minSpending.toFixed(2)}
+                                  Min Spending: $
+                                  {promotion.minSpending.toFixed(2)}
                                 </p>
                               )}
                               <p className="text-sm text-gray-600">
-                                Valid until: {new Date(promotion.endTime).toLocaleDateString()}
+                                Valid until:{" "}
+                                {new Date(
+                                  promotion.endTime
+                                ).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
@@ -216,7 +223,7 @@ export function Promotions() {
                             {/* Made both rate and bonus points styling consistent */}
                             {promotion.rate && (
                               <p className="text-lg font-semibold text-green-600">
-                                Rate: x{(promotion.rate).toFixed(0)}
+                                Rate: x{promotion.rate.toFixed(0)}
                               </p>
                             )}
                             {promotion.points > 0 && (

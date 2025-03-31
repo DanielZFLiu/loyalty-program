@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+export const API_BASE_URL = 'http://localhost:3000';
 
 interface LoginResponse {
   token: string;
@@ -10,6 +10,11 @@ interface ProfileUpdateData {
   email?: string;
   birthday?: string;
   avatar?: File;
+}
+
+export interface ResponseFields {
+  error?: string;
+  status: number;
 }
 
 export async function fetchWrapper(endpoint: string, options: RequestInit = {}) {
@@ -39,18 +44,22 @@ export async function fetchWrapper(endpoint: string, options: RequestInit = {}) 
     headers,
   });
 
-  if (!response.ok) {
-    let data;
-    try {
-      data = await response.json();
-    } catch (error) {
-      throw new Error(response.statusText || 'API request failed');
-    }
-    throw new Error(data.error || 'API request failed');
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    throw new Error(`Failed to parse JSON response: ${error}`);
   }
 
-  return response.json();
+  if (!response.ok) {
+    const errorMessage = data?.error || response.statusText;
+    throw new Error(`Request failed with status ${response.status}: ${errorMessage}`);
+  }
+
+  data.status = response.status;
+  return data;
 }
+
 
 // Helper functions for common API calls
 export const api = {

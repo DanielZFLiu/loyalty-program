@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { QRCodeSVG } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom';
+import { getMe } from '@/lib/api/userMe';
+import { createTransferTransaction } from '@/lib/api/transaction';
 
 interface UserData {
   points: number;
@@ -24,18 +26,8 @@ export function Points() {
     // Fetch user data
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem('token'); // Get the token from local storage
-        const response = await fetch('http://localhost:3000/users/me', {
-          credentials: 'include',
-          headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-        const data = await response.json();
-        setUserData(data);
+        const response = await getMe();
+        setUserData(response);
       } catch (error) {
         console.error('Error fetching user data:', error);
         navigate('/login');
@@ -76,20 +68,7 @@ export function Points() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/users/${transferUserId}/transactions`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type: 'transfer', amount, remark: transferRemark }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to transfer points');
-      }
+      await createTransferTransaction(Number(transferUserId), amount, transferRemark);
 
       setTransferSuccess(true);
       setSuccessMessage('Points transferred successfully!'); // Set success message

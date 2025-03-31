@@ -5,17 +5,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { QRCodeSVG } from 'qrcode.react';
-
-
-interface Transaction {
-  id: number;
-  type: 'PURCHASE' | 'ADJUSTMENT' | 'REDEMPTION' | 'TRANSFER' | 'EVENT';
-  amount: number;
-  spent?: number;
-  remark?: string;
-  createdAt: string;
-  createdBy: string;
-}
+import { getMe } from '@/lib/api/userMe';
+import { listTransactions } from '@/lib/api/userMe';
+import type { Transaction } from '@/lib/api/userMe';
+import {createTransferTransaction} from '@/lib/api/transaction';
 
 interface UserProfile {
   id: number;
@@ -49,19 +42,7 @@ export function Dashboard() {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/users/me', {
-        credentials: 'include',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
-      }
-
-      const data = await response.json();
+      const data = await getMe();
       setProfile(data);
 
       // Create QR code value containing user ID and UserId
@@ -82,27 +63,10 @@ export function Dashboard() {
 
   const fetchRecentTransactions = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        page: '1',
-        limit: '5',
+      const data = await listTransactions({
+        page: 1,
+        limit: 5,
       });
-
-      const response = await fetch(
-        `http://localhost:3000/users/me/transactions?${params.toString()}`,
-        {
-          credentials: 'include',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
-      }
-
-      const data = await response.json();
       setRecentTransactions(data.results);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -134,40 +98,10 @@ export function Dashboard() {
         setTransferError('You cannot transfer points to yourself');
         return;
       }
-      const token = localStorage.getItem('token');
+
       const recipientId = Number(transferUserId);
-      // Now make the transfer using the correct API endpoint
-      const response = await fetch(`http://localhost:3000/users/${recipientId}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          type: 'transfer',
-          amount: amount,
-          remark: transferRemark || undefined
-        }),
-      });
 
-      // Check if response is not OK
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-
-        // Attempt to parse JSON only if response is JSON
-        let errorMessage = 'An unexpected error occurred';
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          errorMessage = data.error || errorMessage;
-        } else {
-          errorMessage = `Server responded with status ${response.status}: ${response.statusText}`;
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
+      await createTransferTransaction(recipientId, amount, transferRemark || undefined);
 
       // Refresh profile to get updated points balance
       await fetchProfile();
@@ -315,9 +249,6 @@ export function Dashboard() {
                     <div className="flex items-center space-x-2">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getTransactionColor(transaction.type)}`}>
                         {transaction.type.charAt(0) + transaction.type.slice(1).toLowerCase()}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">

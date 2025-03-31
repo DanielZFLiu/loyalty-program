@@ -46,6 +46,16 @@ export interface Transaction {
     relatedId?: number;
 }
 
+export interface createTransactionResponse{
+    id: string;
+    utorid: string;
+    type: "redemption";
+    processedBy: null;
+    amount: number;
+    remark: string;
+    createdBy: string;
+}
+
 // Response for listing transactions
 export interface GetTransactionsResponse {
     count: number;
@@ -87,7 +97,7 @@ export async function updateMe(data: {
         if (data.name) formData.append("name", data.name);
         if (data.email) formData.append("email", data.email);
         if (data.birthday) formData.append("birthday", data.birthday);
-        formData.append("avatar", data.avatar);
+        if(data.avatar) formData.append("avatar", data.avatar);
 
         return await fetchWrapper("/users/me", {
             method: "PATCH",
@@ -135,7 +145,7 @@ export async function updatePassword(
 export async function createRedemptionTransaction(
     amount: number,
     remark?: string
-): Promise<any> {
+): Promise<createTransactionResponse> {
     return await fetchWrapper("/users/me/transactions", {
         method: "POST",
         body: JSON.stringify({ type: "redemption", amount, remark }),

@@ -3,11 +3,12 @@ import React from 'react';
 interface AlertProps {
   variant?: 'default' | 'destructive';
   children: React.ReactNode;
+  classes?: string;
 }
 
-export const Alert: React.FC<AlertProps> = ({ variant = 'default', children }) => {
+export const Alert: React.FC<AlertProps> = ({ variant = 'default', children, classes = "" }) => {
   return (
-    <div className={`alert ${variant}`}>
+    <div className={`alert ${variant} ${classes}`}>
       {children}
     </div>
   );
