@@ -1,13 +1,18 @@
-import { useEffect, useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
-import { getMe, updateMe } from '@/lib/api/userMe';
-import type { User as UserProfile } from '@/lib/api/userMe';
-
+import { useEffect, useState, useRef } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "../contexts/UserContext";
+import { getMe, updateMe, updatePassword } from "@/lib/api/userMe";
+import type { User as UserProfile } from "@/lib/api/userMe";
+import { API_BASE_URL } from "@/lib/api/fetchWrapper";
 
 interface PasswordData {
   old: string;
@@ -21,13 +26,13 @@ export function Profile() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
   const [passwordData, setPasswordData] = useState<PasswordData>({
-    old: '',
-    new: '',
-    confirmNew: ''
+    old: "",
+    new: "",
+    confirmNew: "",
   });
-  const [error, setError] = useState<string>('');
-  const [passwordError, setPasswordError] = useState<string>('');
-  const [passwordSuccess, setPasswordSuccess] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+  const [passwordSuccess, setPasswordSuccess] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,10 +49,9 @@ export function Profile() {
       setProfile(data);
       // @ts-ignore
       setUser(data); // Update context
-
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      navigate('/login');
+      console.error("Error fetching profile:", error);
+      navigate("/login");
     }
   };
 
@@ -77,16 +81,22 @@ export function Profile() {
 
   const validatePassword = (password: string): boolean => {
     // 8-20 characters, at least one uppercase, one lowercase, one number, one special character
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,20}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,20}$/;
     return passwordRegex.test(password);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      const data = {name: formData.name, email: formData.email, birthday: formData.birthday, avatar: avatarFile}
+      const data = {
+        name: formData.name,
+        email: formData.email,
+        birthday: formData.birthday,
+        avatar: avatarFile,
+      };
       // @ts-ignore
       const response = await updateMe(data);
 
@@ -105,13 +115,15 @@ export function Profile() {
       setAvatarFile(null);
       setAvatarPreview(null);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to update profile');
+      setError(
+        error instanceof Error ? error.message : "Failed to update profile"
+      );
     }
   };
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError('');
-    setPasswordSuccess('');
+    setPasswordError("");
+    setPasswordSuccess("");
 
     // Validate passwords
     if (passwordData.new !== passwordData.confirmNew) {
@@ -127,41 +139,25 @@ export function Profile() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/users/me/password', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          old: passwordData.old,
-          new: passwordData.new
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update password');
-      }
+      await updatePassword(passwordData.old, passwordData.new);
 
       // Reset password form
       setPasswordData({
-        old: '',
-        new: '',
-        confirmNew: ''
+        old: "",
+        new: "",
+        confirmNew: "",
       });
-      setPasswordSuccess('Password updated successfully!');
+      setPasswordSuccess("Password updated successfully!");
 
       // Close password form after successful update
       setTimeout(() => {
         setIsChangingPassword(false);
-        setPasswordSuccess('');
+        setPasswordSuccess("");
       }, 3000);
-
     } catch (error) {
-      setPasswordError(error instanceof Error ? error.message : 'Failed to update password');
+      setPasswordError(
+        error instanceof Error ? error.message : "Failed to update password"
+      );
     }
   };
 
@@ -188,16 +184,19 @@ export function Profile() {
                   />
                 ) : profile.avatarUrl ? (
                   <img
-                    src={profile.avatarUrl.startsWith('http')
-                      ? profile.avatarUrl
-                      : `http://localhost:3000${profile.avatarUrl}`}
+                    src={
+                      profile.avatarUrl.startsWith("http")
+                        ? profile.avatarUrl
+                        : `${API_BASE_URL}${profile.avatarUrl}`
+                    }
                     alt="User Avatar"
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                     <span className="text-2xl text-gray-500">
-                      {profile.name?.charAt(0).toUpperCase() || profile.utorid?.charAt(0).toUpperCase()}
+                      {profile.name?.charAt(0).toUpperCase() ||
+                        profile.utorid?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
@@ -243,7 +242,9 @@ export function Profile() {
                   <Input
                     id="name"
                     name="name"
-                    value={isEditing ? formData.name || profile.name : profile.name}
+                    value={
+                      isEditing ? formData.name || profile.name : profile.name
+                    }
                     onChange={handleInputChange}
                     disabled={!isEditing}
                   />
@@ -255,7 +256,11 @@ export function Profile() {
                     id="email"
                     name="email"
                     type="email"
-                    value={isEditing ? formData.email || profile.email : profile.email}
+                    value={
+                      isEditing
+                        ? formData.email || profile.email
+                        : profile.email
+                    }
                     onChange={handleInputChange}
                     disabled={!isEditing}
                   />
@@ -269,8 +274,8 @@ export function Profile() {
                     type="date"
                     value={
                       isEditing
-                        ? formData.birthday || profile.birthday || ''
-                        : profile.birthday || ''
+                        ? formData.birthday || profile.birthday || ""
+                        : profile.birthday || ""
                     }
                     onChange={handleInputChange}
                     disabled={!isEditing}
@@ -288,7 +293,7 @@ export function Profile() {
                         onClick={() => {
                           setIsEditing(false);
                           setFormData({});
-                          setError('');
+                          setError("");
                           setAvatarFile(null);
                           setAvatarPreview(null);
                         }}
@@ -298,10 +303,7 @@ export function Profile() {
                       <Button type="submit">Save Changes</Button>
                     </>
                   ) : (
-                    <Button
-                      type="button"
-                      onClick={() => setIsEditing(true)}
-                    >
+                    <Button type="button" onClick={() => setIsEditing(true)}>
                       Edit Profile
                     </Button>
                   )}
@@ -322,12 +324,11 @@ export function Profile() {
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-medium">Password</h3>
-                <p className="text-sm text-gray-500">Change your account password</p>
+                <p className="text-sm text-gray-500">
+                  Change your account password
+                </p>
               </div>
-              <Button
-                type="button"
-                onClick={() => setIsChangingPassword(true)}
-              >
+              <Button type="button" onClick={() => setIsChangingPassword(true)}>
                 Change Password
               </Button>
             </div>
@@ -370,12 +371,17 @@ export function Profile() {
               </div>
 
               <p className="text-xs text-gray-500">
-                Password must be 8-20 characters and include at least one uppercase letter,
-                one lowercase letter, one number, and one special character.
+                Password must be 8-20 characters and include at least one
+                uppercase letter, one lowercase letter, one number, and one
+                special character.
               </p>
 
-              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
-              {passwordSuccess && <p className="text-green-500 text-sm">{passwordSuccess}</p>}
+              {passwordError && (
+                <p className="text-red-500 text-sm">{passwordError}</p>
+              )}
+              {passwordSuccess && (
+                <p className="text-green-500 text-sm">{passwordSuccess}</p>
+              )}
 
               <div className="flex justify-end space-x-2">
                 <Button
@@ -384,11 +390,11 @@ export function Profile() {
                   onClick={() => {
                     setIsChangingPassword(false);
                     setPasswordData({
-                      old: '',
-                      new: '',
-                      confirmNew: ''
+                      old: "",
+                      new: "",
+                      confirmNew: "",
                     });
-                    setPasswordError('');
+                    setPasswordError("");
                   }}
                 >
                   Cancel

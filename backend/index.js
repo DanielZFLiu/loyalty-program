@@ -31,17 +31,19 @@ const { testLog } = require("./middleware/testLog");
 const multer = require("multer");
 const path = require("path");
 const express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 const app = express();
-const fs = require('fs');
+const fs = require("fs");
 
-// Add CORS configuration here
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// CORS configuration
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use((req, res, next) => {
@@ -60,8 +62,7 @@ if (!fs.existsSync(uploadDir)) {
 if (!fs.existsSync(avatarDir)) {
   fs.mkdirSync(avatarDir);
 }
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // #region user routes
 app.post("/users", authenticate, requireAuth("CASHIER"), user.registerUser);
@@ -77,11 +78,11 @@ const upload = multer({
     },
     filename: function (req, file, cb) {
       // Create a unique filename
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       const ext = path.extname(file.originalname);
       cb(null, uniqueSuffix + ext);
-    }
-  })
+    },
+  }),
 });
 
 app.get("/users/me", authenticate, requireAuth("REGULAR"), userMe.getMe);
@@ -96,7 +97,6 @@ app.all("/users/me", (_req, res) => {
   res.status(405).json({ error: "method not allowed" });
 });
 
-
 app.patch(
   "/users/me/password",
   authenticate,
@@ -106,7 +106,6 @@ app.patch(
 app.all("/users/me/password", (_req, res) => {
   res.status(405).json({ error: "method not allowed" });
 });
-
 
 app.post(
   "/users/me/transactions",
@@ -123,7 +122,6 @@ app.get(
 app.all("/users/me/transactions", (_req, res) => {
   res.status(405).json({ error: "method not allowed" });
 });
-
 
 app.get("/users/:userId", authenticate, requireAuth("CASHIER"), user.getUser);
 app.patch(
@@ -204,7 +202,7 @@ app.patch(
   authenticate,
   requireAuth("CASHIER"),
   transaction.processRedemptionTransaction
-)
+);
 
 app.post(
   "/users/:userId/transactions",
