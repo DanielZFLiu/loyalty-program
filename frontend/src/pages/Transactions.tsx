@@ -8,7 +8,8 @@ import {
 import { Button } from "../components/ui/button";
 import { TransactionFilters } from "../components/TransactionFilters";
 import { useNavigate } from "react-router-dom";
-import { listTransactions, type ListTransactionsOptions, type Transaction } from "@/lib/api/userMe";
+import { listTransactions as listMyTransactions, type ListTransactionsOptions, type Transaction } from "@/lib/api/userMe";
+import { listTransactions } from "@/lib/api/transaction";
 
 
 export function Transactions() {
@@ -50,7 +51,7 @@ export function Transactions() {
         params.operator = filters.operator;
       }
       
-      const data = await listTransactions(params);
+      const data = await listMyTransactions(params);
       setTransactions(data.results);
       setTotalPages(Math.ceil(data.count / 10));
     } catch (error) {
