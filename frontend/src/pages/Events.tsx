@@ -3,16 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { EventFilters } from '../components/EventFilters';
 import { useNavigate } from 'react-router-dom';
-
-interface Event {
-  id: number;
-  name: string;
-  location: string;
-  startTime: string;
-  endTime: string;
-  capacity: number;
-  numGuests: number;
-}
+import { listEvents } from '@/lib/api/event';
+import type { Event } from '@/lib/api/event';
 
 export function Events() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -20,11 +12,13 @@ export function Events() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    name: undefined,
-    location: undefined,
-    started: undefined,
-    ended: undefined,
+  const [filters, setFilters] = useState<{
+    name?: string;
+    location?: string;
+    started?: boolean;
+    ended?: boolean;
+    showFull: boolean;
+  }>({
     showFull: false,
   });
   const navigate = useNavigate();
@@ -32,48 +26,37 @@ export function Events() {
   const fetchEvents = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(10),
-      });
+
+      const params: {
+        name?: string;
+        location?: string;
+        started?: boolean;
+        ended?: boolean;
+        showFull?: boolean;
+        page?: number;
+        limit?: number;
+        published?: boolean;
+      } = {
+        page,
+        limit: 10,
+      };
 
       // Add filters to params if they exist, ensuring empty strings are not sent
-      if (filters.name && filters.name.trim() !== '') params.append('name', filters.name);
-      if (filters.location && filters.location.trim() !== '') params.append('location', filters.location);
-      
+      if (filters.name && filters.name.trim() !== '') params.name = filters.name;
+      if (filters.location && filters.location.trim() !== '') params.location = filters.location;
+
       // Only add one of started or ended, not both (per API requirement)
-      if (filters.started !== undefined) {
-        params.append('started', String(filters.started));
-      } else if (filters.ended !== undefined) {
-        params.append('ended', String(filters.ended));
-      }
-      
+      if (filters.started !== undefined) params.started = filters.started;
+      else if (filters.ended !== undefined) params.ended = filters.ended;
+
       // Only add showFull if it's true (since default is false)
-      if (filters.showFull === true) {
-        params.append('showFull', 'true');
-      }
+      if (filters.showFull === true) params.showFull = true;
 
       console.log('Fetching with params:', params.toString());
-      
-      const response = await fetch(
-        `http://localhost:3000/events?${params.toString()}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+
+      const response = await listEvents(params);
 
       if (response.status === 401) {
         // Unauthorized - token expired
@@ -84,20 +67,15 @@ export function Events() {
 
       if (response.status === 400) {
         // Bad request - handle validation errors
-        const errorData = await response.json();
-        setError(errorData.message || 'Invalid filter parameters');
+        setError(response.error || 'Invalid filter parameters');
         setEvents([]);
         setTotalPages(0);
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setEvents(data.results || []);
-      setTotalPages(Math.ceil((data.count || 0) / 10));
+      // const data = await response.json();
+      setEvents(response.results || []);
+      setTotalPages(Math.ceil((response.count || 0) / 10));
     } catch (error) {
       console.error('Error fetching events:', error);
       setError('Failed to load events. Please try again later.');
@@ -118,7 +96,7 @@ export function Events() {
     const timer = setTimeout(() => {
       fetchEvents();
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [filters]);
 
@@ -128,7 +106,7 @@ export function Events() {
       // Prioritize started (arbitrarily)
       newFilters.ended = undefined;
     }
-    
+
     setFilters(newFilters);
     // Reset to first page when filters change
     setPage(1);
@@ -199,8 +177,8 @@ export function Events() {
               {events.map((event) => {
                 const status = getEventStatus(event);
                 return (
-                  <Card 
-                    key={event.id} 
+                  <Card
+                    key={event.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => handleEventClick(event.id)}
                   >

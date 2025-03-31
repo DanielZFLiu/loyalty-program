@@ -4,18 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../compone
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription } from '../components/ui/alert';
-
-interface EventDetail {
-  id: number;
-  name: string;
-  description: string;
-  location: string;
-  startTime: string;
-  endTime: string;
-  capacity: number;
-  organizers: { id: number; utorid: string; name: string }[];
-  numGuests: number;
-}
+import { addMyGuest, getEvent, removeMyGuest } from '@/lib/api/event';
+import type { Event as EventDetail } from '@/lib/api/event';
 
 interface Rsvp {
   id: number;
@@ -34,53 +24,25 @@ export function EventDetails() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   // Function to check RSVP status by attempting to RSVP
-  const checkRsvpStatus = async (token: string) => {
-    try {
-      // Try to RSVP - if we get a 400, it means we're already RSVP'd
-      const rsvpCheckResponse = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+  const checkRsvpStatus = async () => {
+    const data = await addMyGuest(Number(eventId));
 
-      if (rsvpCheckResponse.status === 400) {
-        // 400 means already RSVP'd
-        setRsvpStatus(true);
-        return;
-      } else if (rsvpCheckResponse.status === 201) {
-        // Successfully RSVP'd, but we were checking status
-        // Update the event data
-        const data = await rsvpCheckResponse.json();
-        setEvent(prev => prev ? {...prev, numGuests: data.numGuests} : null);
-        
-        // Now cancel this RSVP since we were just checking
-        const cancelResponse = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (cancelResponse.ok) {
-          // Successfully canceled the test RSVP
-          setRsvpStatus(false);
-        } else {
-          // If we couldn't cancel, leave it as RSVP'd
-          setRsvpStatus(true);
-        }
-      } else {
-        // Any other response means not RSVP'd
-        setRsvpStatus(false);
-      }
-    } catch (error) {
-      console.error('Error checking RSVP status:', error);
-      // If we can't check, assume not RSVP'd
+    if (data.status == 400) { // already rsvped
+      setRsvpStatus(true);
+      return;
+    }
+    else if (data.error) {
       setRsvpStatus(false);
+      return;
+    }
+    else {
+      setEvent(prev => prev ? { ...prev, numGuests: data.numGuests } : null);
+
+      // Now cancel this RSVP since we were just checking
+      const cancelResponse = await removeMyGuest(Number(eventId));
+
+      if (!cancelResponse.error) setRsvpStatus(false);
+      else setRsvpStatus(true);
     }
   };
 
@@ -90,21 +52,8 @@ export function EventDetails() {
       setError(null);
 
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
         // Fetch event details
-        const response = await fetch(`http://localhost:3000/events/${eventId}`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await getEvent(Number(eventId));
 
         if (response.status === 401) {
           localStorage.removeItem('token');
@@ -118,15 +67,10 @@ export function EventDetails() {
           return;
         }
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
-        const eventData = await response.json();
-        setEvent(eventData);
+        setEvent(response);
 
         // Now try to RSVP to see if we're already registered
-        await checkRsvpStatus(token);
+        await checkRsvpStatus();
       } catch (error) {
         console.error('Error fetching event details:', error);
         setError('Failed to load event details. Please try again later.');
@@ -142,22 +86,9 @@ export function EventDetails() {
     setRsvpLoading(true);
     setError(null);
     setStatusMessage(null);
-    
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
 
-      const response = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+    try {
+      const response = await addMyGuest(Number(eventId));
 
       if (response.status === 401) {
         localStorage.removeItem('token');
@@ -177,13 +108,8 @@ export function EventDetails() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
       // Update the event with new guest count
-      setEvent(prev => prev ? {...prev, numGuests: data.numGuests} : null);
+      setEvent(prev => prev ? { ...prev, numGuests: response.numGuests } : null);
       setRsvpStatus(true);
       setStatusMessage("You've successfully RSVP'd to this event!");
     } catch (error) {
@@ -198,22 +124,9 @@ export function EventDetails() {
     setRsvpLoading(true);
     setError(null);
     setStatusMessage(null);
-    
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
 
-      const response = await fetch(`http://localhost:3000/events/${eventId}/guests/me`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+    try {
+      const response = await removeMyGuest(Number(eventId));
 
       if (response.status === 401) {
         localStorage.removeItem('token');
@@ -233,12 +146,8 @@ export function EventDetails() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
       // Update the event with reduced guest count
-      setEvent(prev => prev ? {...prev, numGuests: prev.numGuests - 1} : null);
+      setEvent(prev => prev ? { ...prev, numGuests: prev.numGuests? prev.numGuests - 1 : 0 } : null);
       setRsvpStatus(false);
       setStatusMessage("Your RSVP has been cancelled.");
     } catch (error) {
@@ -261,7 +170,7 @@ export function EventDetails() {
 
   const getEventStatus = () => {
     if (!event) return '';
-    
+
     const now = new Date();
     const startTime = new Date(event.startTime);
     const endTime = new Date(event.endTime);
@@ -302,8 +211,8 @@ export function EventDetails() {
             <div className="bg-red-100 text-red-800 p-4 rounded-md">
               {error || 'Event not found'}
             </div>
-            <Button 
-              className="mt-4" 
+            <Button
+              className="mt-4"
               onClick={() => navigate('/events')}
             >
               Back to Events
@@ -315,7 +224,7 @@ export function EventDetails() {
   }
 
   const status = getEventStatus();
-  const isEventFull = event.numGuests >= event.capacity;
+  const isEventFull = event.capacity? ((event.numGuests? event.numGuests : 0) >= event.capacity) : false;
   const isEventEnded = status === 'Completed';
 
   return (
@@ -324,42 +233,42 @@ export function EventDetails() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">{event.name}</CardTitle>
-            <Badge className={getEventStatusColor(status)}>{status}</Badge>
+            <Badge classes={getEventStatusColor(status)} text={status}></Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <Alert variant="destructive" className="mb-4">
+            <Alert variant="destructive" classes="mb-4">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           {statusMessage && (
-            <Alert variant="default" className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <Alert variant="default" classes="mb-4 bg-green-50 text-green-800 border-green-200">
               <AlertDescription>{statusMessage}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Event Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Event Information</h3>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Location</h4>
                 <p className="text-md">{event.location}</p>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Start Time</h4>
                 <p className="text-md">{formatDateTime(event.startTime)}</p>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-gray-500">End Time</h4>
                 <p className="text-md">{formatDateTime(event.endTime)}</p>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Capacity</h4>
                 <p className="text-md">
@@ -367,17 +276,17 @@ export function EventDetails() {
                   {isEventFull && <span className="text-red-600 ml-2">(Full)</span>}
                 </p>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Organizers</h4>
                 <ul className="list-disc pl-5">
-                  {event.organizers.map(organizer => (
+                  {event.organizers?.map(organizer => (
                     <li key={organizer.id}>{organizer.name} ({organizer.utorid})</li>
                   ))}
                 </ul>
               </div>
             </div>
-            
+
             {/* Event Description */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Description</h3>
@@ -387,27 +296,27 @@ export function EventDetails() {
             </div>
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex justify-between">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => navigate('/events')}
           >
             Back to Events
           </Button>
-          
+
           {!isEventEnded && (
             rsvpStatus ? (
-              <Button 
-                variant="destructive" 
-                onClick={handleCancelRsvp} 
+              <Button
+                variant="destructive"
+                onClick={handleCancelRsvp}
                 disabled={rsvpLoading || isEventEnded}
               >
                 {rsvpLoading ? 'Processing...' : 'Cancel RSVP'}
               </Button>
             ) : (
-              <Button 
-                onClick={handleRsvp} 
+              <Button
+                onClick={handleRsvp}
                 disabled={rsvpLoading || isEventFull || isEventEnded}
               >
                 {rsvpLoading ? 'Processing...' : isEventFull ? 'Event Full' : 'RSVP to Event'}

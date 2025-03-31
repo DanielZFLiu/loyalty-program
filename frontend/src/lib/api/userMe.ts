@@ -87,7 +87,7 @@ export async function updateMe(data: {
         if (data.name) formData.append("name", data.name);
         if (data.email) formData.append("email", data.email);
         if (data.birthday) formData.append("birthday", data.birthday);
-        formData.append("avatar", data.avatar);
+        if(data.avatar) formData.append("avatar", data.avatar);
 
         return await fetchWrapper("/users/me", {
             method: "PATCH",

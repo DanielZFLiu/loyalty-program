@@ -838,7 +838,7 @@ async function removeMyGuest(req, res) {
     await prisma.eventGuest.delete({
       where: { eventId_userId: { eventId, userId: req.user.id } },
     });
-    return res.status(204).send();
+    return res.status(204).send({});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "server error while removing guest" });

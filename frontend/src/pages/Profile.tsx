@@ -5,20 +5,9 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { getMe, updateMe } from '@/lib/api/userMe';
+import type { User as UserProfile } from '@/lib/api/userMe';
 
-interface UserProfile {
-  id: number;
-  utorid: string;
-  name: string;
-  email: string;
-  birthday?: string;
-  avatarUrl?: string;
-  role?: string;
-  points?: number;
-  createdAt?: string;
-  lastLogin?: string;
-  verified?: boolean;
-}
 
 interface PasswordData {
   old: string;
@@ -51,22 +40,11 @@ export function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/users/me', {
-        credentials: 'include',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
-      }
-      
-      const data = await response.json();
+      const data = await getMe();
       setProfile(data);
+      // @ts-ignore
       setUser(data); // Update context
-      
+
     } catch (error) {
       console.error('Error fetching profile:', error);
       navigate('/login');
@@ -87,7 +65,7 @@ export function Profile() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setAvatarFile(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -106,48 +84,22 @@ export function Profile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-  
+
     try {
-      const token = localStorage.getItem('token');
-      const formDataToSend = new FormData();
-      
-      // Add text fields to FormData
-      if (formData.name) formDataToSend.append('name', formData.name);
-      if (formData.email) formDataToSend.append('email', formData.email);
-      if (formData.birthday) formDataToSend.append('birthday', formData.birthday);
-      
-      // Add avatar file if selected
-      if (avatarFile) {
-        formDataToSend.append('avatar', avatarFile);
-        console.log("Added file to form data:", avatarFile.name);
-      }
-  
-      // Do NOT set Content-Type header when sending FormData
-      // The browser will automatically set the correct multipart/form-data content type
-      const response = await fetch('http://localhost:3000/users/me', {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-        body: avatarFile ? formDataToSend : JSON.stringify(formData),
-      });
-  
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update profile');
-      }
-  
-      const updatedProfile = await response.json();
-      console.log("Updated profile received:", updatedProfile);
-      setProfile(updatedProfile);
-      setUser(updatedProfile); // Update context with full profile
-      
+      const data = {name: formData.name, email: formData.email, birthday: formData.birthday, avatar: avatarFile}
+      // @ts-ignore
+      const response = await updateMe(data);
+
+      console.log("Updated profile received:", response);
+      setProfile(response);
+      // @ts-ignore
+      setUser(response); // Update context with full profile
+
       // If avatar was updated
-      if (avatarFile && updatedProfile.avatarUrl) {
-        updateUserAvatar(updatedProfile.avatarUrl); // Update avatar specifically
+      if (avatarFile && response.avatarUrl) {
+        updateUserAvatar(response.avatarUrl); // Update avatar specifically
       }
-      
+
       setIsEditing(false);
       setFormData({});
       setAvatarFile(null);
@@ -201,13 +153,13 @@ export function Profile() {
         confirmNew: ''
       });
       setPasswordSuccess('Password updated successfully!');
-      
+
       // Close password form after successful update
       setTimeout(() => {
         setIsChangingPassword(false);
         setPasswordSuccess('');
       }, 3000);
-      
+
     } catch (error) {
       setPasswordError(error instanceof Error ? error.message : 'Failed to update password');
     }
@@ -229,18 +181,18 @@ export function Profile() {
             <div className="flex flex-col items-center space-y-4">
               <div className="w-32 h-32 rounded-full overflow-hidden border">
                 {avatarPreview ? (
-                  <img 
-                    src={avatarPreview} 
-                    alt="Avatar preview" 
-                    className="w-full h-full object-cover" 
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="w-full h-full object-cover"
                   />
                 ) : profile.avatarUrl ? (
-                  <img 
-                    src={profile.avatarUrl.startsWith('http') 
-                      ? profile.avatarUrl 
-                      : `http://localhost:3000${profile.avatarUrl}`} 
-                    alt="User Avatar" 
-                    className="w-full h-full object-cover" 
+                  <img
+                    src={profile.avatarUrl.startsWith('http')
+                      ? profile.avatarUrl
+                      : `http://localhost:3000${profile.avatarUrl}`}
+                    alt="User Avatar"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -250,7 +202,7 @@ export function Profile() {
                   </div>
                 )}
               </div>
-              
+
               {isEditing && (
                 <div>
                   <input
@@ -261,9 +213,9 @@ export function Profile() {
                     accept="image/*"
                     onChange={handleAvatarChange}
                   />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Change Avatar
@@ -372,7 +324,7 @@ export function Profile() {
                 <h3 className="text-lg font-medium">Password</h3>
                 <p className="text-sm text-gray-500">Change your account password</p>
               </div>
-              <Button 
+              <Button
                 type="button"
                 onClick={() => setIsChangingPassword(true)}
               >
@@ -418,7 +370,7 @@ export function Profile() {
               </div>
 
               <p className="text-xs text-gray-500">
-                Password must be 8-20 characters and include at least one uppercase letter, 
+                Password must be 8-20 characters and include at least one uppercase letter,
                 one lowercase letter, one number, and one special character.
               </p>
 

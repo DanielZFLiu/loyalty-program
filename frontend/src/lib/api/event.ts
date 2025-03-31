@@ -1,5 +1,5 @@
-// frontend/src/lib/api/event.ts
 import { fetchWrapper } from "./fetchWrapper";
+import type { ResponseFields } from "./fetchWrapper";
 
 /* ================================
    TypeScript Interfaces
@@ -130,7 +130,7 @@ export async function listEvents(queryParams?: {
     page?: number;
     limit?: number;
     published?: boolean;
-}): Promise<ListEventsResponse> {
+}): Promise<ListEventsResponse & ResponseFields> {
     // Build query string from provided parameters.
     const params = new URLSearchParams();
     if (queryParams) {
@@ -150,7 +150,7 @@ export async function listEvents(queryParams?: {
 /**
  * Retrieve a single event by its id.
  */
-export async function getEvent(eventId: number): Promise<Event> {
+export async function getEvent(eventId: number): Promise<Event & ResponseFields> {
     const response = await fetchWrapper(`/events/${eventId}`, {
         method: "GET",
     });
@@ -214,7 +214,7 @@ export async function removeEventOrganizer(
 export async function addEventGuest(
     eventId: number,
     payload: { utorid: string }
-): Promise<GuestResponse> {
+): Promise<GuestResponse & ResponseFields> {
     const response = await fetchWrapper(`/events/${eventId}/guests`, {
         method: "POST",
         body: JSON.stringify(payload),
@@ -225,7 +225,7 @@ export async function addEventGuest(
 /**
  * Add the logged in user as a guest to an event.
  */
-export async function addMyGuest(eventId: number): Promise<GuestResponse> {
+export async function addMyGuest(eventId: number): Promise<GuestResponse & ResponseFields> {
     const response = await fetchWrapper(`/events/${eventId}/guests/me`, {
         method: "POST",
     });
@@ -235,10 +235,11 @@ export async function addMyGuest(eventId: number): Promise<GuestResponse> {
 /**
  * Remove the logged in user from an event.
  */
-export async function removeMyGuest(eventId: number): Promise<void> {
-    await fetchWrapper(`/events/${eventId}/guests/me`, {
+export async function removeMyGuest(eventId: number): Promise<ResponseFields> {
+    const response = await fetchWrapper(`/events/${eventId}/guests/me`, {
         method: "DELETE",
     });
+    return response;
 }
 
 /**
