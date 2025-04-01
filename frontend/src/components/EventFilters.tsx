@@ -11,7 +11,8 @@ import {
 import { Filter, X } from 'lucide-react';
 
 export function EventFilters({ 
-  onFilterChange 
+  onFilterChange,
+  // filterMode
 }: { 
   onFilterChange: (filters: {
     name?: string;
@@ -19,7 +20,8 @@ export function EventFilters({
     started?: boolean;
     ended?: boolean;
     showFull?: boolean;
-  }) => void 
+  }) => void;
+  // filterMode: "partial" | "all" // partial: user, cashier; all: manager, superuser
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [name, setName] = useState<string | undefined>(undefined);
