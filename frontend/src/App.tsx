@@ -16,6 +16,7 @@ import { Promotions } from "./pages/Promotions";
 import { useState, useEffect } from "react";
 import { api } from "./lib/api/fetchWrapper";
 import { Users } from "./pages/Users";
+import { UserDetails } from "./pages/UserDetails";
 
 interface User {
   id: number;
@@ -59,77 +60,77 @@ function App() {
   }
 
   return (
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          {user && <Navbar user={user} onLogout={handleLogout} />}
-          <main>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  user ? (
-                    <Navigate to="/dashboard" replace />
-                  ) : (
-                    <Navigate to="/login" replace />
-                  )
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  user ? <Dashboard /> : <Navigate to="/login" replace />
-                }
-              />
-              <Route
-                path="/transactions"
-                element={
-                  user ? <Transactions /> : <Navigate to="/login" replace />
-                }
-              />
-              <Route
-                path="/events"
-                element={user ? <Events /> : <Navigate to="/login" replace />}
-              />
-              <Route
-                path="/events/:eventId"
-                element={
-                  user ? <EventDetails /> : <Navigate to="/login" replace />
-                }
-              />
-              <Route
-                path="/promotions"
-                element={
-                  user ? <Promotions /> : <Navigate to="/login" replace />
-                }
-              />
-              <Route
-                path="/users"
-                element={
-                  user ? <Users /> : <Navigate to="/login" replace />
-                }
-              />
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        {user && <Navbar user={user} onLogout={handleLogout} />}
+        <main>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={user ? <Dashboard /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/transactions"
+              element={
+                user ? <Transactions /> : <Navigate to="/login" replace />
+              }
+            />
+            <Route
+              path="/events"
+              element={user ? <Events /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/events/:eventId"
+              element={
+                user ? <EventDetails /> : <Navigate to="/login" replace />
+              }
+            />
+            
+            <Route
+              path="/promotions"
+              element={user ? <Promotions /> : <Navigate to="/login" replace />}
+            />
 
-              <Route
-                path="/redeem"
-                element={
-                  user ? <RedemptionPage /> : <Navigate to="/login" replace />
-                }
-              />
+            <Route
+              path="/users"
+              element={user ? <Users /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/users/:userId"
+              element={
+                user ? <UserDetails /> : <Navigate to="/login" replace />
+              }
+            />
 
-              <Route
-                path="/profile"
-                element={user ? <Profile /> : <Navigate to="/login" replace />}
-              />
-              <Route
-                path="/login"
-                element={
-                  user ? <Navigate to="/dashboard" replace /> : <Login />
-                }
-              />
-            </Routes>
-          </main>
-        </div>
-      </Router>
+            <Route
+              path="/redeem"
+              element={
+                user ? <RedemptionPage /> : <Navigate to="/login" replace />
+              }
+            />
+
+            <Route
+              path="/profile"
+              element={user ? <Profile /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/login"
+              element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+            />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 

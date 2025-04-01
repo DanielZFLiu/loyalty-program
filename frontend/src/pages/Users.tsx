@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserFilters } from "@/components/filters/UserFilters";
 import { listUsers } from "@/lib/api/user";
 import type { ListUsersQuery, User } from "@/lib/api/user";
 import { checkRole } from "@/lib/api/util";
-import { Shield, UserCheck, UserX, Calendar, Mail, Clock } from "lucide-react";
+import {
+  Shield,
+  UserCheck,
+  UserX,
+  Calendar,
+  Mail,
+  Clock,
+  ChevronRight,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -122,6 +125,10 @@ export function Users() {
     });
   };
 
+  const handleUserClick = (userId: number) => {
+    navigate(`/users/${userId}`);
+  };
+
   // If not authorized, show nothing
   if (!isAuthorized && !loading) {
     return null;
@@ -152,7 +159,8 @@ export function Users() {
                   {users.map((user) => (
                     <Card
                       key={user.id}
-                      className="hover:shadow-md transition-shadow"
+                      className="hover:shadow-md transition-shadow cursor-pointer group"
+                      onClick={() => handleUserClick(user.id)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -196,16 +204,16 @@ export function Users() {
                                 {user.verified !== undefined &&
                                   (user.verified ? (
                                     <Badge
+                                      classes="bg-green-300 text-green-800 border-green-200"
                                       text="Verified"
-                                      classes="bg-green-300 border-green-200"
                                       innerChild={
                                         <UserCheck className="h-3 w-3 mr-1" />
                                       }
                                     ></Badge>
                                   ) : (
                                     <Badge
+                                      classes="bg-yellow-300 text-yellow-800 border-yellow-200"
                                       text="Unverified"
-                                      classes="bg-yellow-300 border-yellow-200"
                                       innerChild={
                                         <UserX className="h-3 w-3 mr-1" />
                                       }
@@ -240,15 +248,18 @@ export function Users() {
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <p className="text-lg font-semibold">
-                              {user.points} points
-                            </p>
-                            {user.createdAt && (
-                              <p className="text-xs text-gray-500">
-                                Member since {formatDate(user.createdAt)}
+                          <div className="flex items-center">
+                            <div className="text-right mr-4">
+                              <p className="text-lg font-semibold">
+                                {user.points} points
                               </p>
-                            )}
+                              {user.createdAt && (
+                                <p className="text-xs text-gray-500">
+                                  Member since {formatDate(user.createdAt)}
+                                </p>
+                              )}
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1" />
                           </div>
                         </div>
                       </CardContent>
