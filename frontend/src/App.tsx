@@ -1,16 +1,22 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Navbar } from './components/Navbar';
-import { Dashboard } from './pages/Dashboard';
-import { Transactions } from './pages/Transactions';
-import { Profile } from './pages/Profile';
-import { Login } from './pages/Login';
-import { Events } from './pages/Events';
-import { EventDetails } from './pages/EventDetails';
-import { RedemptionPage } from './pages/RedemptionPage';
-import { Promotions } from './pages/Promotions';
-import { useState, useEffect } from 'react';
-import { api } from './lib/api/fetchWrapper';
-import { UserProvider } from './contexts/UserContext';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { Navbar } from "./components/Navbar";
+import { Dashboard } from "./pages/Dashboard";
+import { Transactions } from "./pages/Transactions";
+import { Profile } from "./pages/Profile";
+import { Login } from "./pages/Login";
+import { Events } from "./pages/Events";
+import { EventDetails } from "./pages/EventDetails";
+import { RedemptionPage } from "./pages/RedemptionPage";
+import { Promotions } from "./pages/Promotions";
+import { useState, useEffect } from "react";
+import { api } from "./lib/api/fetchWrapper";
+import { UserProvider } from "./contexts/UserContext";
+import { Users } from "./pages/Users";
 
 interface User {
   id: number;
@@ -37,7 +43,7 @@ function App() {
         avatarUrl: data.avatarUrl,
       });
     } catch (error) {
-      console.error('Error checking auth:', error);
+      console.error("Error checking auth:", error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -72,11 +78,15 @@ function App() {
               />
               <Route
                 path="/dashboard"
-                element={user ? <Dashboard /> : <Navigate to="/login" replace />}
+                element={
+                  user ? <Dashboard /> : <Navigate to="/login" replace />
+                }
               />
               <Route
                 path="/transactions"
-                element={user ? <Transactions /> : <Navigate to="/login" replace />}
+                element={
+                  user ? <Transactions /> : <Navigate to="/login" replace />
+                }
               />
               <Route
                 path="/events"
@@ -84,14 +94,28 @@ function App() {
               />
               <Route
                 path="/events/:eventId"
-                element={user ? <EventDetails /> : <Navigate to="/login" replace />}
+                element={
+                  user ? <EventDetails /> : <Navigate to="/login" replace />
+                }
               />
               <Route
                 path="/promotions"
-                element={user ? <Promotions /> : <Navigate to="/login" replace />}
+                element={
+                  user ? <Promotions /> : <Navigate to="/login" replace />
+                }
               />
-              <Route path="/redeem"
-                element={user ? <RedemptionPage /> : <Navigate to="/login" replace />}
+              <Route
+                path="/users"
+                element={
+                  user ? <Users /> : <Navigate to="/login" replace />
+                }
+              />
+
+              <Route
+                path="/redeem"
+                element={
+                  user ? <RedemptionPage /> : <Navigate to="/login" replace />
+                }
               />
 
               <Route
@@ -101,11 +125,7 @@ function App() {
               <Route
                 path="/login"
                 element={
-                  user ? (
-                    <Navigate to="/dashboard" replace />
-                  ) : (
-                    <Login />
-                  )
+                  user ? <Navigate to="/dashboard" replace /> : <Login />
                 }
               />
             </Routes>
