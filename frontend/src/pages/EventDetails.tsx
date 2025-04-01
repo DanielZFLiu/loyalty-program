@@ -33,6 +33,7 @@ export function EventDetails() {
   const checkRsvpStatus = async () => {
     const data = await addMyGuest(Number(eventId));
 
+    console.log("Errors are expected here. Especially 500 internal server error and failed to parse JSON error.");
     if (data.status == 400) {
       // already rsvped
       setRsvpStatus(true);
