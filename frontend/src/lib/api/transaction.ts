@@ -139,13 +139,8 @@ export async function createAdjustmentTransaction(
     });
 }
 
-/**
- * Lists transactions with optional filters.
- *
- * @param filters - Object containing filter options.
- * @returns The count and list of matching transactions.
- */
-export async function listTransactions(filters: {
+
+export interface ListTransactionsOptions {
     name?: string;
     createdBy?: string;
     suspicious?: boolean;
@@ -156,7 +151,15 @@ export async function listTransactions(filters: {
     operator?: "gte" | "lte";
     page?: number;
     limit?: number;
-}): Promise<ListTransactionsResponse> {
+}
+
+/**
+ * Lists transactions with optional filters.
+ *
+ * @param filters - Object containing filter options.
+ * @returns The count and list of matching transactions.
+ */
+export async function listTransactions(filters: ListTransactionsOptions): Promise<ListTransactionsResponse> {
     const queryString = buildQueryString(filters);
     return await fetchWrapper(`/transactions${queryString}`, {
         method: "GET"

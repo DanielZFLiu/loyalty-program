@@ -4,11 +4,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { TransactionFilters } from "../components/TransactionFilters";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { TransactionFilters } from "@/components/filters/TransactionFilters";
 import { useNavigate } from "react-router-dom";
-import { listTransactions, type ListTransactionsOptions, type Transaction } from "@/lib/api/userMe";
+import { checkRole } from "@/lib/api/util";
+import { listTransactions as listMyTransactions, type Transaction } from "@/lib/api/userMe";
+import { listTransactions, type ListTransactionsOptions } from "@/lib/api/transaction";
 
 
 export function Transactions() {
@@ -16,6 +18,9 @@ export function Transactions() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<{
+    name?: string;
+    createdBy?: string;
+    suspicious?: boolean;
     typeFilter?: string;
     relatedId?: number;
     promotionId?: number;
@@ -25,15 +30,23 @@ export function Transactions() {
     typeFilter: "all",
     operator: "gte",
   });
+  const [filterMode, setFilterMode] = useState<"partial" | "all">("partial");
   const navigate = useNavigate();
 
   const fetchTransactions = async () => {
     try {
+      // check if user is manager or above
+      const showAll = await checkRole("manager");
+      if (showAll) setFilterMode("all");
+      else setFilterMode("partial");
+
+      // start building the filter parameters
       const params: ListTransactionsOptions = {
         page,
         limit: 10,
       };
 
+      // filters for both manager/superuser and user/cashier groups
       if (filters.typeFilter && filters.typeFilter !== "all") {
         params.type = filters.typeFilter;
       }
@@ -49,8 +62,29 @@ export function Transactions() {
       if (filters.operator) {
         params.operator = filters.operator;
       }
-      
-      const data = await listTransactions(params);
+
+      // filters for manager/superuser
+      if (showAll && filters.name) {
+        params.name = filters.name;
+      }
+      if (showAll && filters.createdBy) {
+        params.name = filters.createdBy;
+      }
+      if (showAll && filters.suspicious) {
+        params.suspicious = filters.suspicious;
+      }
+
+      console.log(params);
+
+      let data;
+      if (!showAll) {
+        // fetch transactions for user/cashier group
+        data = await listMyTransactions(params);
+      }
+      else {
+        // fetch transactions for manager/superuser group
+        data = await listTransactions(params);
+      }
       setTransactions(data.results);
       setTotalPages(Math.ceil(data.count / 10));
     } catch (error) {
@@ -87,7 +121,7 @@ export function Transactions() {
           <CardTitle>Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
-          <TransactionFilters onFilterChange={setFilters} />
+          <TransactionFilters onFilterChange={setFilters} filterMode={filterMode} />
 
           <div className="space-y-4">
             {transactions.map((transaction) => (
@@ -121,11 +155,10 @@ export function Transactions() {
                     </div>
                     <div className="text-right">
                       <p
-                        className={`text-lg font-semibold ${
-                          transaction.amount >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
+                        className={`text-lg font-semibold ${transaction.amount >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                          }`}
                       >
                         {transaction.amount >= 0 ? "+" : ""}
                         {transaction.amount} points

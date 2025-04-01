@@ -4,39 +4,18 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { ChevronDown, ChevronUp } from "lucide-react";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { PromotionFilters } from "@/components/filters/PromotionFilters";
 import { getPromotions } from "@/lib/api/promotion";
 import type { GetPromotionsQuery, Promotion } from "@/lib/api/promotion";
+import { checkRole } from "@/lib/api/util";
 
 // Define enums to match your Prisma model
 enum PromotionType {
   AUTOMATIC = "automatic",
   ONE_TIME = "one-time",
 }
-
-// Update interface to match your database model
-// interface Promotion {
-//   id: number;
-//   name: string;
-//   description: string;
-//   type: PromotionType;
-//   startTime: string;
-//   endTime: string;
-//   minSpending: number | null;
-//   rate: number | null;
-//   points: number;
-//   createdAt: string;
-// }
 
 export function Promotions() {
   // Initialize state with empty array
@@ -45,15 +24,25 @@ export function Promotions() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isManager, setIsManager] = useState(false);
 
-  // Simplified filters
-  const [nameFilter, setNameFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState<
-    "automatic" | "one-time" | undefined
-  >();
+  // Filter state
+  const [filters, setFilters] = useState<{
+    name?: string;
+    type?: "automatic" | "one-time";
+    started?: boolean;
+    ended?: boolean;
+  }>({});
 
-  // Add state for filter visibility
-  const [showFilters, setShowFilters] = useState(false);
+  useEffect(() => {
+    // Check if user is manager or above
+    const checkUserRole = async () => {
+      const isManagerOrAbove = await checkRole("manager");
+      setIsManager(isManagerOrAbove);
+    };
+
+    checkUserRole();
+  }, []);
 
   useEffect(() => {
     // Define the fetch function
@@ -64,10 +53,9 @@ export function Promotions() {
         const params: GetPromotionsQuery = {
           page: page,
           limit: 10,
-          name: nameFilter,
-          type: typeFilter,
+          ...filters,
         };
-        
+
         const response = await getPromotions(params);
 
         setPromotions(response.results);
@@ -84,26 +72,16 @@ export function Promotions() {
 
     // Call the fetch function
     fetchPromotions();
-  }, [page, nameFilter, typeFilter]);
+  }, [page, filters]);
 
-  // Handle filter changes
-  const handleNameFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNameFilter(e.target.value);
-    setPage(1); // Reset to first page
-  };
-
-  const handleTypeFilterChange = (value: string) => {
-    if (value === "automatic" || value === "one-time") {
-      setTypeFilter(value);
-    } else if (value === "undefined") {
-      setTypeFilter(undefined);
-    }
-    setPage(1); // Reset to first page
-  };
-
-  // Toggle filter visibility
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
+  const handleFilterChange = (newFilters: {
+    name?: string;
+    type?: "automatic" | "one-time";
+    started?: boolean;
+    ended?: boolean;
+  }) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
   };
 
   return (
@@ -112,64 +90,12 @@ export function Promotions() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Active Promotions</CardTitle>
-            <Button
-              variant="outline"
-              onClick={toggleFilters}
-              className="flex items-center gap-2"
-            >
-              {showFilters ? (
-                <>
-                  Hide Filters <ChevronUp className="h-4 w-4" />
-                </>
-              ) : (
-                <>
-                  Show Filters <ChevronDown className="h-4 w-4" />
-                </>
-              )}
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filters - now collapsible */}
-          {showFilters && (
-            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="name-filter"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Filter by Name
-                </label>
-                <Input
-                  id="name-filter"
-                  placeholder="Search promotions..."
-                  value={nameFilter}
-                  onChange={handleNameFilterChange}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="type-filter"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Filter by Type
-                </label>
-                <Select
-                  value={typeFilter}
-                  onValueChange={handleTypeFilterChange}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="undefined">All Types</SelectItem>
-                    <SelectItem value="automatic">Automatic</SelectItem>
-                    <SelectItem value="one-time">One-time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          {/* Only show filters if user is a manager or above */}
+          {isManager && (
+            <PromotionFilters onFilterChange={handleFilterChange} />
           )}
 
           {/* Loading and error states */}

@@ -1,3 +1,11 @@
+This is a generic loyalty program implemented with the following stack:
+1. React
+2. Tailwind
+3. SQLite
+4. Expressjs
+5. Prisma
+The goal of this course project is to familiarize ourselves with the above stack, as well as the process of designing/implementing from the grounds up.
+
 To run the project locally, you have to separately initialize both backend and frontend. 
 
 # Backend
