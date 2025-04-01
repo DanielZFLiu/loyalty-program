@@ -1,50 +1,54 @@
 import { useState } from "react";
-import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "@/components/ui/select";
 import { Filter, X } from "lucide-react";
 
-export function UserFilters({
+export function PromotionFilters({
   onFilterChange,
 }: {
   onFilterChange: (filters: {
     name?: string;
-    role?: string;
-    verified?: boolean;
-    activated?: boolean;
+    type?: "automatic" | "one-time";
+    started?: boolean;
+    ended?: boolean;
   }) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [name, setName] = useState<string>("");
-  const [role, setRole] = useState<string>("");
-  const [verified, setVerified] = useState<boolean | undefined>(undefined);
-  const [activated, setActivated] = useState<boolean | undefined>(undefined);
+  const [type, setType] = useState<"automatic" | "one-time" | undefined>(
+    undefined
+  );
+  const [started, setStarted] = useState<boolean | undefined>(undefined);
+  const [ended, setEnded] = useState<boolean | undefined>(undefined);
 
   const handleApplyFilters = () => {
     onFilterChange({
       name: name || undefined,
-      role: role || undefined,
-      verified,
-      activated,
+      type,
+      started,
+      ended,
     });
   };
 
   const handleResetFilters = () => {
     setName("");
-    setRole("");
-    setVerified(undefined);
-    setActivated(undefined);
+    setType(undefined);
+    setStarted(undefined);
+    setEnded(undefined);
     onFilterChange({});
   };
 
   const hasActiveFilters = () => {
-    return name || role || verified !== undefined || activated !== undefined;
+    return (
+      name || type !== undefined || started !== undefined || ended !== undefined
+    );
   };
 
   return (
@@ -69,57 +73,57 @@ export function UserFilters({
                   onClick={() => {
                     setName("");
                     onFilterChange({
-                      role: role || undefined,
-                      verified,
-                      activated,
+                      type,
+                      started,
+                      ended,
                     });
                   }}
                 />
               </div>
             )}
-            {role && (
+            {type && (
               <div className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Role: {role}
+                Type: {type}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
                   onClick={() => {
-                    setRole("");
+                    setType(undefined);
                     onFilterChange({
                       name: name || undefined,
-                      verified,
-                      activated,
+                      started,
+                      ended,
                     });
                   }}
                 />
               </div>
             )}
-            {verified !== undefined && (
+            {started !== undefined && (
               <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Verified: {verified ? "Yes" : "No"}
+                Started: {started ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
                   onClick={() => {
-                    setVerified(undefined);
+                    setStarted(undefined);
                     onFilterChange({
                       name: name || undefined,
-                      role: role || undefined,
-                      activated,
+                      type,
+                      ended,
                     });
                   }}
                 />
               </div>
             )}
-            {activated !== undefined && (
+            {ended !== undefined && (
               <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Activated: {activated ? "Yes" : "No"}
+                Ended: {ended ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
                   onClick={() => {
-                    setActivated(undefined);
+                    setEnded(undefined);
                     onFilterChange({
                       name: name || undefined,
-                      role: role || undefined,
-                      verified,
+                      type,
+                      started,
                     });
                   }}
                 />
@@ -135,11 +139,11 @@ export function UserFilters({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  User Name
+                  Promotion Name
                 </label>
                 <input
                   type="text"
-                  placeholder="Search by name"
+                  placeholder="Enter Promotion Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full border rounded-md p-2 text-sm"
@@ -148,65 +152,67 @@ export function UserFilters({
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  User Role
+                  Promotion Type
                 </label>
                 <Select
-                  value={role || "all"}
+                  value={type || "all"}
                   onValueChange={(value) =>
-                    setRole(value === "all" ? "" : value)
+                    setType(
+                      value === "all"
+                        ? undefined
+                        : (value as "automatic" | "one-time")
+                    )
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All Roles" />
+                    <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="regular">Regular</SelectItem>
-                    <SelectItem value="cashier">Cashier</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="superuser">Superuser</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="automatic">Automatic</SelectItem>
+                    <SelectItem value="one-time">One-time</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Verification Status
+                  Started Status
                 </label>
                 <Select
-                  value={verified === undefined ? "all" : String(verified)}
+                  value={started === undefined ? "all" : String(started)}
                   onValueChange={(value) =>
-                    setVerified(value === "all" ? undefined : value === "true")
+                    setStarted(value === "all" ? undefined : value === "true")
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Verification Status" />
+                    <SelectValue placeholder="Started Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Users</SelectItem>
-                    <SelectItem value="true">Verified</SelectItem>
-                    <SelectItem value="false">Not Verified</SelectItem>
+                    <SelectItem value="all">All Promotions</SelectItem>
+                    <SelectItem value="true">Started</SelectItem>
+                    <SelectItem value="false">Not Started</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Account Status
+                  Ended Status
                 </label>
                 <Select
-                  value={activated === undefined ? "all" : String(activated)}
+                  value={ended === undefined ? "all" : String(ended)}
                   onValueChange={(value) =>
-                    setActivated(value === "all" ? undefined : value === "true")
+                    setEnded(value === "all" ? undefined : value === "true")
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Account Status" />
+                    <SelectValue placeholder="Ended Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Accounts</SelectItem>
-                    <SelectItem value="true">Activated</SelectItem>
-                    <SelectItem value="false">Deactivated</SelectItem>
+                    <SelectItem value="all">All Promotions</SelectItem>
+                    <SelectItem value="true">Ended</SelectItem>
+                    <SelectItem value="false">Not Ended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

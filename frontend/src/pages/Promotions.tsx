@@ -4,9 +4,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { PromotionFilters } from "../components/PromotionFilters";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { PromotionFilters } from "@/components/filters/PromotionFilters";
 import { getPromotions } from "@/lib/api/promotion";
 import type { GetPromotionsQuery, Promotion } from "@/lib/api/promotion";
 import { checkRole } from "@/lib/api/util";

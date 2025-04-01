@@ -4,12 +4,11 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../contexts/UserContext";
 import { getMe, updateMe, updatePassword } from "@/lib/api/userMe";
 import type { User as UserProfile } from "@/lib/api/userMe";
 import { API_BASE_URL } from "@/lib/api/fetchWrapper";
@@ -37,7 +36,6 @@ export function Profile() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { user: contextUser, setUser, updateUserAvatar } = useUser();
 
   useEffect(() => {
     fetchProfile();
@@ -47,8 +45,6 @@ export function Profile() {
     try {
       const data = await getMe();
       setProfile(data);
-      // @ts-ignore
-      setUser(data); // Update context
     } catch (error) {
       console.error("Error fetching profile:", error);
       navigate("/login");
@@ -102,13 +98,6 @@ export function Profile() {
 
       console.log("Updated profile received:", response);
       setProfile(response);
-      // @ts-ignore
-      setUser(response); // Update context with full profile
-
-      // If avatar was updated
-      if (avatarFile && response.avatarUrl) {
-        updateUserAvatar(response.avatarUrl); // Update avatar specifically
-      }
 
       setIsEditing(false);
       setFormData({});

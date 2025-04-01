@@ -1,12 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { API_BASE_URL } from "@/lib/api/fetchWrapper";
 
 interface NavbarProps {
@@ -33,7 +33,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-8">
           <Link to="/" className="text-xl font-bold">
-            Our App!
+            βασιλεία
           </Link>
 
           {user && (

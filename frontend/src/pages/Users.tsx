@@ -4,16 +4,16 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { UserFilters } from "../components/UserFilters";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { UserFilters } from "@/components/filters/UserFilters";
 import { listUsers } from "@/lib/api/user";
 import type { ListUsersQuery, User } from "@/lib/api/user";
 import { checkRole } from "@/lib/api/util";
 import { Shield, UserCheck, UserX, Calendar, Mail, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "../components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { API_BASE_URL } from "@/lib/api/fetchWrapper";
 
 export function Users() {

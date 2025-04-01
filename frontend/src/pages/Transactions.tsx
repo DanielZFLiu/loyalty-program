@@ -4,9 +4,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { TransactionFilters } from "../components/TransactionFilters";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { TransactionFilters } from "@/components/filters/TransactionFilters";
 import { useNavigate } from "react-router-dom";
 import { checkRole } from "@/lib/api/util";
 import { listTransactions as listMyTransactions, type Transaction } from "@/lib/api/userMe";

@@ -15,7 +15,6 @@ import { RedemptionPage } from "./pages/RedemptionPage";
 import { Promotions } from "./pages/Promotions";
 import { useState, useEffect } from "react";
 import { api } from "./lib/api/fetchWrapper";
-import { UserProvider } from "./contexts/UserContext";
 import { Users } from "./pages/Users";
 
 interface User {
@@ -60,7 +59,6 @@ function App() {
   }
 
   return (
-    <UserProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
           {user && <Navbar user={user} onLogout={handleLogout} />}
@@ -132,7 +130,6 @@ function App() {
           </main>
         </div>
       </Router>
-    </UserProvider>
   );
 }
 

@@ -18,7 +18,7 @@ export interface Event {
     pointsAwarded?: number;
     published?: boolean;
     organizers?: Array<{ id: number; utorid: string; name: string }>;
-    guests?: Array<{ id: number; utorid?: string; name?: string }>;
+    guests?: Array<{ id: number; }>;
     // For regular view:
     numGuests?: number;
 }
