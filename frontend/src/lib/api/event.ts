@@ -118,10 +118,7 @@ export async function createEvent(
     return response;
 }
 
-/**
- * List events with optional filters.
- */
-export async function listEvents(queryParams?: {
+export interface listEventsQueryParams {
     name?: string;
     location?: string;
     started?: boolean;
@@ -130,7 +127,12 @@ export async function listEvents(queryParams?: {
     page?: number;
     limit?: number;
     published?: boolean;
-}): Promise<ListEventsResponse & ResponseFields> {
+}
+
+/**
+ * List events with optional filters.
+ */
+export async function listEvents(queryParams?: listEventsQueryParams): Promise<ListEventsResponse & ResponseFields> {
     // Build query string from provided parameters.
     const params = new URLSearchParams();
     if (queryParams) {

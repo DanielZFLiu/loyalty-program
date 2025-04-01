@@ -74,6 +74,8 @@ export function Transactions() {
         params.suspicious = filters.suspicious;
       }
 
+      console.log(params);
+
       let data;
       if (!showAll) {
         // fetch transactions for user/cashier group

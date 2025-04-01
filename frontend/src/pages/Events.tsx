@@ -4,7 +4,8 @@ import { Button } from '../components/ui/button';
 import { EventFilters } from '../components/EventFilters';
 import { useNavigate } from 'react-router-dom';
 import { listEvents } from '@/lib/api/event';
-import type { Event } from '@/lib/api/event';
+import type { Event, listEventsQueryParams } from '@/lib/api/event';
+import { checkRole } from '@/lib/api/util';
 
 export function Events() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -12,15 +13,10 @@ export function Events() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<{
-    name?: string;
-    location?: string;
-    started?: boolean;
-    ended?: boolean;
-    showFull: boolean;
-  }>({
+  const [filters, setFilters] = useState<listEventsQueryParams>({
     showFull: false,
   });
+  const [filterMode, setFilterMode] = useState<"partial" | "all">("partial");
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
@@ -28,17 +24,13 @@ export function Events() {
     setError(null);
 
     try {
+      // check if user is manager or above
+      const showAll = await checkRole("manager");
+      if (showAll) setFilterMode("all");
+      else setFilterMode("partial");
 
-      const params: {
-        name?: string;
-        location?: string;
-        started?: boolean;
-        ended?: boolean;
-        showFull?: boolean;
-        page?: number;
-        limit?: number;
-        published?: boolean;
-      } = {
+      // Ensure page is a positive integer
+      const params: listEventsQueryParams = {
         page,
         limit: 10,
       };
@@ -51,10 +43,12 @@ export function Events() {
       if (filters.started !== undefined) params.started = filters.started;
       else if (filters.ended !== undefined) params.ended = filters.ended;
 
-      // Only add showFull if it's true (since default is false)
-      if (filters.showFull === true) params.showFull = true;
+      if (filters.showFull) params.showFull = filters.showFull;
 
-      console.log('Fetching with params:', params.toString());
+      // manager/superuser only filter
+      if (filters.published !== undefined && showAll) params.published = filters.published;
+
+      console.log('Fetching with params:', params);
 
       const response = await listEvents(params);
 
@@ -100,12 +94,13 @@ export function Events() {
     return () => clearTimeout(timer);
   }, [filters]);
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: listEventsQueryParams) => {
     // If both started and ended are defined, only keep one
     if (newFilters.started !== undefined && newFilters.ended !== undefined) {
       // Prioritize started (arbitrarily)
       newFilters.ended = undefined;
     }
+    console.log(newFilters);
 
     setFilters(newFilters);
     // Reset to first page when filters change
@@ -156,7 +151,7 @@ export function Events() {
           <CardTitle>Event List</CardTitle>
         </CardHeader>
         <CardContent>
-          <EventFilters onFilterChange={handleFilterChange} />
+          <EventFilters onFilterChange={handleFilterChange} filterMode={filterMode} />
 
           {error && (
             <div className="bg-red-100 text-red-800 p-3 rounded-md mb-4">
