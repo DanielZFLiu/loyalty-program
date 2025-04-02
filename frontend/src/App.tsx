@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { api } from "./lib/api/fetchWrapper";
 import { Users } from "./pages/Users";
 import { UserDetails } from "./pages/UserDetails";
+import { TransactionDetails } from "./pages/TransactionDetails";
 
 interface User {
   id: number;
@@ -79,12 +80,22 @@ function App() {
               path="/dashboard"
               element={user ? <Dashboard /> : <Navigate to="/login" replace />}
             />
+
+            {/* transactions */}
             <Route
               path="/transactions"
               element={
                 user ? <Transactions /> : <Navigate to="/login" replace />
               }
             />
+            <Route
+              path="/transactions/:transactionId"
+              element={
+                user ? <TransactionDetails /> : <Navigate to="/login" replace />
+              }
+            />
+
+            {/* events */}
             <Route
               path="/events"
               element={user ? <Events /> : <Navigate to="/login" replace />}
@@ -95,12 +106,14 @@ function App() {
                 user ? <EventDetails /> : <Navigate to="/login" replace />
               }
             />
-            
+
+            {/* promotions */}
             <Route
               path="/promotions"
               element={user ? <Promotions /> : <Navigate to="/login" replace />}
             />
 
+            {/* users */}
             <Route
               path="/users"
               element={user ? <Users /> : <Navigate to="/login" replace />}
