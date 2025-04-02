@@ -242,7 +242,7 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {recentTransactions.length > 0 ? (
+            {recentTransactions?.length > 0 ? (
               recentTransactions.map((transaction) => (
                 <div key={transaction.id} className="border rounded-lg p-3 flex justify-between items-center">
                   <div>

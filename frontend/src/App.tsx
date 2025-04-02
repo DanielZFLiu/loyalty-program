@@ -13,49 +13,18 @@ import { Events } from "./pages/Events";
 import { EventDetails } from "./pages/EventDetails";
 import { RedemptionPage } from "./pages/RedemptionPage";
 import { Promotions } from "./pages/Promotions";
-import { useState, useEffect } from "react";
-import { api } from "./lib/api/fetchWrapper";
+import { useUser } from "./contexts/UserContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import CashierDashboard from "./pages/cashier/CashierDashboard.tsx";
+import CashierTransaction from "./pages/cashier/CashierTransaction.tsx";
+import CashierRedemption from "./pages/cashier/CashierRedemption.tsx";
 import { Users } from "./pages/Users";
 import { UserDetails } from "./pages/UserDetails";
 import { TransactionDetails } from "./pages/TransactionDetails";
 import { PromotionDetails } from "./components/managePromotions/PromotionDetails";
 
-interface User {
-  id: number;
-  name: string;
-  role: string;
-  avatarUrl?: string;
-}
-
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const data = await api.getCurrentUser();
-      setUser({
-        id: data.id,
-        name: data.name,
-        role: data.role,
-        avatarUrl: data.avatarUrl,
-      });
-    } catch (error) {
-      console.error("Error checking auth:", error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    api.logout();
-    setUser(null);
-  };
+  const { user, loading, handleLogout } = useUser();
 
   if (loading) {
     return <div>Loading...</div>;
@@ -146,6 +115,30 @@ function App() {
             <Route
               path="/login"
               element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+            />
+            <Route
+              path="/cashier"
+              element={
+                <ProtectedRoute clearance="CASHIER">
+                  <CashierDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/create-transaction"
+              element={
+                <ProtectedRoute clearance="CASHIER">
+                  <CashierTransaction />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/process-redemption"
+              element={
+                <ProtectedRoute clearance="CASHIER">
+                  <CashierRedemption />
+                </ProtectedRoute>
+              }
             />
           </Routes>
         </main>
