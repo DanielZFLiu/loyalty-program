@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CoinsIcon, PencilIcon, Trash2Icon } from "lucide-react";
-import { EventUserManagement } from "@/components/eventDetails/EventUserManagement";
+import { EventUserManagement } from "@/components/manageEvents/EventUserManagement";
 import { type Event, getEvent } from "@/lib/api/event";
 
 interface EventInformationProps {

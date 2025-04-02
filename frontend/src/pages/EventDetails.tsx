@@ -10,8 +10,8 @@ import {
   type Event as EventDetail,
 } from "@/lib/api/event";
 import { checkRole } from "@/lib/api/util";
-import { EventActionDialogs } from "@/components/eventDetails/EventActionDialogs";
-import { EventInformation } from "@/components/eventDetails/EventInformation";
+import { EventActionDialogs } from "@/components/manageEvents/EventActionDialogs";
+import { EventInformation } from "@/components/manageEvents/EventInformation";
 
 export function EventDetails() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -33,6 +33,7 @@ export function EventDetails() {
   const checkRsvpStatus = async () => {
     const data = await addMyGuest(Number(eventId));
 
+    console.log("Errors are expected here. Especially 500 internal server error and failed to parse JSON error.");
     if (data.status == 400) {
       // already rsvped
       setRsvpStatus(true);

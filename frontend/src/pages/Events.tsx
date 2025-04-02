@@ -12,7 +12,7 @@ import { listEvents } from "@/lib/api/event";
 import type { Event, listEventsQueryParams } from "@/lib/api/event";
 import { checkRole } from "@/lib/api/util";
 import { PlusCircle } from "lucide-react";
-import { EventCreateForm } from "@/components/eventDetails/EventCreateForm";
+import { EventCreateForm } from "@/components/manageEvents/EventCreateForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export function Events() {
