@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { EventEditForm } from "@/components/eventDetails/EventEditForm";
+import { EventEditForm } from "@/components/manageEvents/EventEditForm";
 import {
   deleteEvent,
   createEventTransaction,

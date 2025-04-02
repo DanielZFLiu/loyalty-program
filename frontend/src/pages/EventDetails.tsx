@@ -10,8 +10,8 @@ import {
   type Event as EventDetail,
 } from "@/lib/api/event";
 import { checkRole } from "@/lib/api/util";
-import { EventActionDialogs } from "@/components/eventDetails/EventActionDialogs";
-import { EventInformation } from "@/components/eventDetails/EventInformation";
+import { EventActionDialogs } from "@/components/manageEvents/EventActionDialogs";
+import { EventInformation } from "@/components/manageEvents/EventInformation";
 
 export function EventDetails() {
   const { eventId } = useParams<{ eventId: string }>();

@@ -18,6 +18,7 @@ import { api } from "./lib/api/fetchWrapper";
 import { Users } from "./pages/Users";
 import { UserDetails } from "./pages/UserDetails";
 import { TransactionDetails } from "./pages/TransactionDetails";
+import { PromotionDetails } from "./components/managePromotions/PromotionDetails";
 
 interface User {
   id: number;
@@ -111,6 +112,12 @@ function App() {
             <Route
               path="/promotions"
               element={user ? <Promotions /> : <Navigate to="/login" replace />}
+            />
+                        <Route
+              path="/promotions/:promotionId"
+              element={
+                user ? <PromotionDetails /> : <Navigate to="/login" replace />
+              }
             />
 
             {/* users */}

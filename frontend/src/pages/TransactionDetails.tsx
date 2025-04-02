@@ -25,7 +25,7 @@ import {
   Tag,
   Link as LinkIcon,
 } from "lucide-react";
-import { AdjustmentForm } from "@/components/AdjustmentForm";
+import { AdjustmentForm } from "@/components/manageTransactions/AdjustmentForm";
 import {
   Dialog,
   DialogContent,
@@ -201,8 +201,8 @@ export function TransactionDetails() {
                     ? "Mark Not Suspicious"
                     : "Mark Suspicious"}
                 </Button>
-                {(transaction.type === "purchase" ||
-                  transaction.type === "PURCHASE") && (
+                {(transaction.type !== "adjustment" &&
+                  transaction.type !== "ADJUSTMENT") && (
                   <Button
                     variant="outline"
                     size="sm"

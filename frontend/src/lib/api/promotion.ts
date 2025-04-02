@@ -1,3 +1,4 @@
+// @/lib/api/promotion.ts: 
 import { fetchWrapper } from "./fetchWrapper";
 
 /* ================================

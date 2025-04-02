@@ -16,7 +16,7 @@ import {
   type UpdateUserInput,
 } from "@/lib/api/user";
 import { checkRole } from "@/lib/api/util";
-import { UserEditForm } from "@/components/UserEditForm";
+import { UserEditForm } from "@/components/manageUsers/UserEditForm";
 import { API_BASE_URL } from "@/lib/api/fetchWrapper";
 import { Shield, UserCheck, UserX, Calendar, Mail, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
