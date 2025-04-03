@@ -103,7 +103,18 @@ export function Navbar({ user, onLogout }: NavbarProps) {
     <nav className="bg-white border-b py-3 px-4 md:px-6">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-8">
-          <Link to="/" className="text-xl font-bold">
+          <Link 
+            to={(() => {
+              const currentPath = window.location.pathname;
+              if (currentPath.startsWith('/cashier')) {
+                return '/cashier';
+              } else if (currentPath.startsWith('/manager')) {
+                return '/manager';
+              }
+              return '/dashboard';
+            })()}
+            className="text-xl font-bold"
+          >
             βασιλεία
           </Link>
 
