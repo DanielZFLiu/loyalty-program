@@ -59,6 +59,7 @@ function App() {
     { path: "/manager/users", element: <Users /> },
     { path: "/manager/users/:userId", element: <UserDetails /> },
     { path: "/manager/transactions", element: <Transactions /> },
+    { path: "/manager/transactions/:transactionId", element: <TransactionDetails /> },
     { path: "/manager/events", element: <Events /> },
     { path: "/manager/events/:eventId", element: <EventDetails /> },
     { path: "/manager/promotions", element: <Promotions /> },

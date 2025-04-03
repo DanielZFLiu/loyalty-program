@@ -88,13 +88,13 @@ export function Promotions() {
 
   const handlePromotionClick = (id: number) => {
     if (isManager) {
-      navigate(`/promotions/${id}`);
+      navigate(`${window.location.pathname}/${id}`);
     }
   };
 
   const handleCreatePromotion = (promotionId: number) => {
     setCreateDialogOpen(false);
-    navigate(`/promotions/${promotionId}`);
+    navigate(`${window.location.pathname}/${promotionId}`);
   };
 
   const formatDate = (dateString: string) => {
