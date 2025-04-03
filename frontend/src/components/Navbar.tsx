@@ -5,6 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { API_BASE_URL } from '@/lib/api/fetchWrapper';
@@ -19,7 +20,7 @@ interface NavbarProps {
 export function Navbar({ user, onLogout }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   let currentInterface: Roles = 'REGULAR';
   const path = location.pathname;
   if (path.startsWith('/cashier')) {
@@ -27,9 +28,6 @@ export function Navbar({ user, onLogout }: NavbarProps) {
   }
   if (path.startsWith('/manager')) {
     currentInterface = 'MANAGER';
-  }
-  if (path.startsWith('/superuser')) {
-    currentInterface = 'SUPERUSER';
   }
 
   const handleLogout = () => {
@@ -58,45 +56,22 @@ export function Navbar({ user, onLogout }: NavbarProps) {
       case 'MANAGER':
         return (
           <>
-            <Link to="/dashboard" className="text-gray-600 hover:text-black">
+            <Link to="/manager" className="text-gray-600 hover:text-black">
               Dashboard
             </Link>
-            <Link to="/transactions" className="text-gray-600 hover:text-black">
+            <Link to="/manager/transactions" className="text-gray-600 hover:text-black">
               Transactions
             </Link>
-            <Link to="/promotions" className="text-gray-600 hover:text-black">
+            <Link to="/manager/promotions" className="text-gray-600 hover:text-black">
               Promotions
             </Link>
-            <Link to="/events" className="text-gray-600 hover:text-black">
+            <Link to="/manager/events" className="text-gray-600 hover:text-black">
               Events
             </Link>
-            <Link to="/redeem" className="text-gray-600 hover:text-black">
+            <Link to="/manager/redeem" className="text-gray-600 hover:text-black">
               Redeem Points
             </Link>
-            <Link to="/users" className="text-gray-600 hover:text-black">
-              Users
-            </Link>
-          </>
-        );
-      case 'SUPERUSER':
-        return (
-          <>
-            <Link to="/dashboard" className="text-gray-600 hover:text-black">
-              Dashboard
-            </Link>
-            <Link to="/transactions" className="text-gray-600 hover:text-black">
-              Transactions
-            </Link>
-            <Link to="/promotions" className="text-gray-600 hover:text-black">
-              Promotions
-            </Link>
-            <Link to="/events" className="text-gray-600 hover:text-black">
-              Events
-            </Link>
-            <Link to="/redeem" className="text-gray-600 hover:text-black">
-              Redeem Points
-            </Link>
-            <Link to="/users" className="text-gray-600 hover:text-black">
+            <Link to="/manager/users" className="text-gray-600 hover:text-black">
               Users
             </Link>
           </>
@@ -149,8 +124,8 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                       user.avatarUrl?.startsWith("http")
                         ? user.avatarUrl
                         : user.avatarUrl
-                        ? `${API_BASE_URL}${user.avatarUrl}`
-                        : undefined
+                          ? `${API_BASE_URL}${user.avatarUrl}`
+                          : undefined
                     }
                     alt={user.name}
                   />
@@ -164,7 +139,35 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                   <p className="text-xs text-gray-500">{user.role}</p>
                 </div>
 
-                <DropdownMenuItem onSelect={() => navigate("/profile")}>
+                {(user.role === 'MANAGER' || user.role === 'SUPERUSER' || user.role === 'CASHIER') && (
+                  <>
+                    <DropdownMenuItem onSelect={() => navigate("/dashboard")}>
+                      Switch to Regular Interface
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => navigate("/cashier")}>
+                      Switch to Cashier Interface
+                    </DropdownMenuItem>
+                    {(user.role === 'MANAGER' || user.role === 'SUPERUSER') && (
+                      <DropdownMenuItem onSelect={() => navigate("/manager")}>
+                        Switch to Manager Interface
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+
+                <DropdownMenuItem 
+                  onSelect={() => {
+                    const currentPath = window.location.pathname;
+                    if (currentPath.startsWith('/cashier')) {
+                      navigate('/cashier/profile');
+                    } else if (currentPath.startsWith('/manager')) {
+                      navigate('/manager/profile');
+                    } else {
+                      navigate('/profile');
+                    }
+                  }}
+                >
                   Profile
                 </DropdownMenuItem>
 

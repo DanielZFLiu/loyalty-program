@@ -15,9 +15,10 @@ import { RedemptionPage } from "./pages/RedemptionPage";
 import { Promotions } from "./pages/Promotions";
 import { useUser } from "./contexts/UserContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import CashierDashboard from "./pages/cashier/CashierDashboard.tsx";
-import CashierTransaction from "./pages/cashier/CashierTransaction.tsx";
-import CashierRedemption from "./pages/cashier/CashierRedemption.tsx";
+import CashierDashboard from "./pages/CashierDashboard.tsx";
+import CashierTransaction from "./pages/CashierTransaction.tsx";
+import CashierRedemption from "./pages/CashierRedemption.tsx";
+import { getHomeByRole } from "./lib/permissions.ts";
 import { Users } from "./pages/Users";
 import { UserDetails } from "./pages/UserDetails";
 import { TransactionDetails } from "./pages/TransactionDetails";
@@ -30,6 +31,40 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  const regularRoutes = [
+    { path: "/dashboard", element: <Dashboard /> },
+    { path: "/profile", element: <Profile /> },
+    { path: "/transactions", element: <Transactions /> },
+    { path: "/transactions/:transactionId", element: <TransactionDetails /> },
+    { path: "/events", element: <Events /> },
+    { path: "/events/:eventId", element: <EventDetails /> },
+    { path: "/promotions", element: <Promotions /> },
+    { path: "/promotions/:promotionId", element: <PromotionDetails /> },
+    { path: "/redeem", element: <RedemptionPage /> },
+  ];
+
+  const cashierRoutes = [
+    { path: "/cashier", element: <CashierDashboard /> },
+    { path: "/cashier/profile", element: <Profile /> },
+    { path: "/cashier/create-transaction", element: <CashierTransaction /> },
+    { path: "/cashier/process-redemption", element: <CashierRedemption /> },
+  ];
+
+  // check if these are actually what we need in this interface
+  // no need for superuser routes? no unique pages + navbar
+  const managerRoutes = [
+    // TODO: add manager dashboard
+    { path: "/manager", element: <></> },
+    { path: "/manager/profile", element: <Profile /> },
+    { path: "/manager/users", element: <Users /> },
+    { path: "/manager/users/:userId", element: <UserDetails /> },
+    { path: "/manager/transactions", element: <Transactions /> },
+    { path: "/manager/events", element: <Events /> },
+    { path: "/manager/events/:eventId", element: <EventDetails /> },
+    { path: "/manager/promotions", element: <Promotions /> },
+    { path: "/manager/promotions/:promotionId", element: <PromotionDetails /> },
+  ];
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
@@ -40,106 +75,49 @@ function App() {
               path="/"
               element={
                 user ? (
-                  <Navigate to="/dashboard" replace />
+                  <Navigate to={getHomeByRole(user.role)} replace />
                 ) : (
                   <Navigate to="/login" replace />
                 )
               }
             />
             <Route
-              path="/dashboard"
-              element={user ? <Dashboard /> : <Navigate to="/login" replace />}
-            />
-
-            {/* transactions */}
-            <Route
-              path="/transactions"
-              element={
-                user ? <Transactions /> : <Navigate to="/login" replace />
-              }
-            />
-            <Route
-              path="/transactions/:transactionId"
-              element={
-                user ? <TransactionDetails /> : <Navigate to="/login" replace />
-              }
-            />
-
-            {/* events */}
-            <Route
-              path="/events"
-              element={user ? <Events /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/events/:eventId"
-              element={
-                user ? <EventDetails /> : <Navigate to="/login" replace />
-              }
-            />
-
-            {/* promotions */}
-            <Route
-              path="/promotions"
-              element={user ? <Promotions /> : <Navigate to="/login" replace />}
-            />
-                        <Route
-              path="/promotions/:promotionId"
-              element={
-                user ? <PromotionDetails /> : <Navigate to="/login" replace />
-              }
-            />
-
-            {/* users */}
-            <Route
-              path="/users"
-              element={user ? <Users /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/users/:userId"
-              element={
-                user ? <UserDetails /> : <Navigate to="/login" replace />
-              }
-            />
-
-            <Route
-              path="/redeem"
-              element={
-                user ? <RedemptionPage /> : <Navigate to="/login" replace />
-              }
-            />
-
-            <Route
-              path="/profile"
-              element={user ? <Profile /> : <Navigate to="/login" replace />}
-            />
-            <Route
               path="/login"
-              element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+              element={user ? <Navigate to="/" replace /> : <Login />}
             />
-            <Route
-              path="/cashier"
-              element={
-                <ProtectedRoute clearance="CASHIER">
-                  <CashierDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cashier/create-transaction"
-              element={
-                <ProtectedRoute clearance="CASHIER">
-                  <CashierTransaction />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cashier/process-redemption"
-              element={
-                <ProtectedRoute clearance="CASHIER">
-                  <CashierRedemption />
-                </ProtectedRoute>
-              }
-            />
+
+            {/* Regular users */}
+            {regularRoutes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={<ProtectedRoute clearance="REGULAR">
+                  {route.element}
+                </ProtectedRoute>}
+              />
+            ))}
+
+            {/* Cashiers */}
+            {cashierRoutes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={<ProtectedRoute clearance="CASHIER">
+                  {route.element}
+                </ProtectedRoute>}
+              />
+            ))}
+
+            {/* Managers (+ Superusers) */}
+            {managerRoutes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={<ProtectedRoute clearance="MANAGER">
+                  {route.element}
+                </ProtectedRoute>}
+              />
+            ))}
           </Routes>
         </main>
       </div>
