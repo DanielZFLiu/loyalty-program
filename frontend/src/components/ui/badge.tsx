@@ -1,16 +1,16 @@
-import React, { ReactElement } from 'react';
-
 interface BadgeProps {
-  text: string;
   classes?: string;
-  innerChild?: ReactElement
+  text: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ text, classes = "", innerChild = <div></div> }) => {
+export function Badge({ classes, text }: BadgeProps) {
   return (
-    <span className={`bg-blue-500 text-white px-2 py-1 rounded flex items-center gap-2 ${classes}`}>
+    <span
+      className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
+        classes || "bg-gray-100 text-gray-800"
+      }`}
+    >
       {text}
-      {innerChild}
     </span>
   );
-};
+}

@@ -344,7 +344,7 @@ export function TransactionFilters({
                 </label>
                 <input
                   type="number"
-                  placeholder="Enter Related ID"
+                  placeholder="Enter Related ID (Used with Type)"
                   value={relatedId === undefined ? '' : relatedId}
                   onChange={(e) => {
                     const value = Number(e.target.value);
