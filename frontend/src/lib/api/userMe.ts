@@ -128,7 +128,9 @@ export async function updateMe(data: {
 export async function updatePassword(
     oldPassword: string,
     newPassword: string
-): Promise<{ message: string }> {
+): Promise<{
+  error: any; message: string 
+}> {
     return await fetchWrapper("/users/me/password", {
         method: "PATCH",
         body: JSON.stringify({ old: oldPassword, new: newPassword }),

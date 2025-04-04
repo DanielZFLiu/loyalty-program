@@ -9,6 +9,7 @@ interface UserContextType {
   setUser: (user: User | null) => void;
   updateUserAvatar: (avatarUrl: string) => void;
   handleLogout: () => void;
+  refreshUser: () => Promise<void>; // Add this to the interface
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -33,6 +34,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshUser = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getCurrentUser() as User;
+      setUser(data);
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     api.logout();
     setUser(null);
@@ -48,7 +61,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, loading, setUser, updateUserAvatar, handleLogout }}>
+    <UserContext.Provider value={{ 
+      user, 
+      loading, 
+      setUser, 
+      updateUserAvatar, 
+      handleLogout,
+      refreshUser
+    }}>
       {children}
     </UserContext.Provider>
   );

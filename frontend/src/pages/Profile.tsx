@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { getMe, updateMe, updatePassword } from "@/lib/api/userMe";
 import type { User as UserProfile } from "@/lib/api/userMe";
 import { API_BASE_URL } from "@/lib/api/fetchWrapper";
+import { useUser } from "@/contexts/UserContext"; // Import the user context
 
 interface PasswordData {
   old: string;
@@ -20,6 +21,7 @@ interface PasswordData {
 }
 
 export function Profile() {
+  const { refreshUser } = useUser(); // Access the refreshUser function from context
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -99,6 +101,10 @@ export function Profile() {
       console.log("Updated profile received:", response);
       setProfile(response);
 
+      // Call refreshUser from the context to update the global user state
+      // This will ensure the Navbar gets the updated avatar
+      refreshUser();
+
       setIsEditing(false);
       setFormData({});
       setAvatarFile(null);
@@ -109,6 +115,7 @@ export function Profile() {
       );
     }
   };
+  
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError("");
@@ -128,8 +135,13 @@ export function Profile() {
     }
 
     try {
-      await updatePassword(passwordData.old, passwordData.new);
-
+      const response = await updatePassword(passwordData.old, passwordData.new);
+    
+      // Check if there was an error in the response
+      if (response.error) {
+        setPasswordError(response.error);
+        return;
+      }
       // Reset password form
       setPasswordData({
         old: "",
