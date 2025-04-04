@@ -23,6 +23,7 @@ import { Users } from "./pages/Users";
 import { UserDetails } from "./pages/UserDetails";
 import { TransactionDetails } from "./pages/TransactionDetails";
 import { PromotionDetails } from "./components/managePromotions/PromotionDetails";
+import { ManagerDashboard } from "./pages/ManagerDashboard.tsx";
 
 function App() {
   const { user, loading, handleLogout } = useUser();
@@ -50,11 +51,8 @@ function App() {
     { path: "/cashier/process-redemption", element: <CashierRedemption /> },
   ];
 
-  // check if these are actually what we need in this interface
-  // no need for superuser routes? no unique pages + navbar
   const managerRoutes = [
-    // TODO: add manager dashboard
-    { path: "/manager", element: <></> },
+    { path: "/manager", element: <ManagerDashboard /> },
     { path: "/manager/profile", element: <Profile /> },
     { path: "/manager/users", element: <Users /> },
     { path: "/manager/users/:userId", element: <UserDetails /> },
