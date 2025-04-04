@@ -19,7 +19,7 @@ import type { Transaction } from "@/lib/api/userMe";
 interface UserData {
   points: number;
   id: number;
-  utorid: string;
+  createdBy: string;
   isVerified?: boolean;
 }
 
@@ -115,7 +115,6 @@ export function RedemptionPage() {
         (transaction: Transaction) =>
           transaction.type === "redemption"
       );
-
       // Set the redemption data with the new transaction
       setRedemptionData(redemptionTx || null);
 
@@ -172,7 +171,8 @@ export function RedemptionPage() {
                 value={JSON.stringify({
                   id: redemptionData.id,
                   type: "redemption",
-                  amount: redemptionData.amount,
+                  amount: redemptionData.amount, 
+                  createdBy: redemptionData.createdBy
                 })}
                 size={200}
               />
