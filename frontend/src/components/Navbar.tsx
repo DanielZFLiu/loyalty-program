@@ -99,6 +99,8 @@ export function Navbar({ user, onLogout }: NavbarProps) {
     }
   };
 
+  const interfaceDisplay = currentInterface.charAt(0).toUpperCase() + currentInterface.slice(1).toLowerCase();
+
   return (
     <nav className="bg-white border-b py-3 px-4 md:px-6">
       <div className="container mx-auto flex justify-between items-center">
@@ -125,7 +127,10 @@ export function Navbar({ user, onLogout }: NavbarProps) {
           )}
         </div>
 
-        <div>
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500 hidden md:block">
+            {interfaceDisplay} Interface
+          </div>
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger>

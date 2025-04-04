@@ -23,7 +23,7 @@ export const getHomeByRole = (role: Roles) => {
     case 'MANAGER':
       return '/manager';
     case 'SUPERUSER':
-      return '/superuser';
+      return '/manager';
     default:
       return '/';
   }
