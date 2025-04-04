@@ -160,14 +160,30 @@ export function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Points Balance Card */}
-      <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
-        <CardContent className="pt-6 pb-6">
-          <div className="text-center">
-            <h2 className="text-xl font-medium mb-2">Your Points Balance</h2>
-            <p className="text-5xl font-bold">{profile?.points || 0}</p>
+      <Card className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white">
+    <CardContent className="p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Welcome, {profile?.name || "User"}
+          </h1>
+          <p className="text-indigo-100 mt-1">
+            Regular User Dashboard •{" "}
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        </div>
+          <div className="mt-4 md:mt-0 md:text-right">
+            <p className="text-indigo-100 text-sm">Points</p>
+            <p className="text-3xl font-bold">{profile?.points || 0}</p>
           </div>
-        </CardContent>
-      </Card>
+      </div>
+    </CardContent>
+  </Card>
 
       {/* QR Code and Transfer Widget Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
