@@ -155,12 +155,12 @@ export function Events() {
   };
 
   const handleEventClick = (eventId: number) => {
-    navigate(`${window.location.pathname}/events/${eventId}`);
+    navigate(`${window.location.pathname}/${eventId}`);
   };
 
   const handleCreateEvent = (eventId: number) => {
     setCreateDialogOpen(false);
-    navigate(`${window.location.pathname}/events/${eventId}`);
+    navigate(`${window.location.pathname}/${eventId}`);
   };
 
   return (
