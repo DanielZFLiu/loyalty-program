@@ -22,6 +22,9 @@ export default function CashierCreateTransaction() {
   const [oneTimePromotionPage, setOneTimePromotionPage] = useState(1);
   const [totalOneTimePromotions, setTotalOneTimePromotions] = useState(0);
 
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
   useEffect(() => {
     fetchPromotions();
   }, [autoPromotionPage, oneTimePromotionPage]);
@@ -59,20 +62,36 @@ export default function CashierCreateTransaction() {
         promo.minSpending && Number(spent) < promo.minSpending
       );
       if (invalidPromotions.length > 0) {
-        // todo: some kind of toast notification
+        // Add error state and display it
+        setError("Transaction amount doesn't meet minimum spending requirement for selected promotions");
         return;
       }
-      await createPurchaseTransaction(utorid, Number(spent), promotionIds, remark);
+      
+      const response = await createPurchaseTransaction(utorid, Number(spent), promotionIds, remark);
+      
+      // Check if there was an error in the response
+      if (response.error) {
+        setError(response.error);
+        return;
+      }
+      
+      // Reset form on success
+      setUtorid('');
+      setSpent('');
+      setRemark('');
+      setSelectedPromotions([]);
+      setSuccess("Transaction created successfully");
     } catch (error) {
-      console.error('Failed to create transaction', error);
+      setError(error instanceof Error ? error.message : "Failed to create transaction");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Create Transaction</h1>
+      {error && <div className="p-3 mb-4 text-sm text-white bg-red-500 rounded">{error}</div>}
+      {success && <div className="p-3 mb-4 text-sm text-white bg-green-500 rounded">{success}</div>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="utorid">UtorID</Label>

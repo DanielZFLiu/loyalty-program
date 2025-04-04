@@ -20,7 +20,7 @@ async function createPurchaseTransaction(req, res) {
     return res.status(400).json({ error: "missing required fields" });
   }
   if (typeof spent !== "number" || spent <= 0) {
-    return res.status(400).json({ error: "spent must be a number" });
+    return res.status(400).json({ error: "Amount spent must be >0" });
   }
 
   // Find customer by utorid
@@ -40,13 +40,13 @@ async function createPurchaseTransaction(req, res) {
       if (!promo) {
         return res
           .status(400)
-          .json({ error: `promotion id ${pid} does not exist` });
+          .json({ error: `promotion ${promo.name} does not exist` });
       }
       const now = new Date();
       if (promo.startTime > now || promo.endTime < now) {
         return res
           .status(400)
-          .json({ error: `promotion id ${pid} is expired or not active` });
+          .json({ error: `promotion ${promo.name} is expired or not active` });
       }
       if (promo.type === "ONE_TIME") {
         const userPromo = await prisma.userPromotion.findUnique({
@@ -57,7 +57,7 @@ async function createPurchaseTransaction(req, res) {
         if (userPromo && userPromo.used) {
           return res
             .status(400)
-            .json({ error: `promotion id ${pid} has already been used` });
+            .json({ error: `promotion "${promo.name}" has already been used. Please unselect that promotion and try again` });
         }
       }
       validPromotions.push(promo);
@@ -67,7 +67,7 @@ async function createPurchaseTransaction(req, res) {
   // Fetch automatic promotions
   const automaticPromotions = await prisma.promotion.findMany({
     where: {
-      type: 'automatic',
+      type: 'AUTOMATIC',
       startTime: { lte: new Date() },
       endTime: { gte: new Date() },
       OR: [

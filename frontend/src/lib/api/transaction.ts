@@ -54,6 +54,7 @@ export interface TransferTransactionResponse {
 }
 
 export interface RedemptionTransactionResponse {
+    error: any;
     id: number;
     utorid: string | null;
     type: "redemption";
