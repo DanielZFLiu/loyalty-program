@@ -101,8 +101,17 @@ export function Dashboard() {
 
       const recipientId = Number(transferUserId);
 
-      await createTransferTransaction(recipientId, amount, transferRemark || undefined);
-
+      const response = await createTransferTransaction(recipientId, amount, transferRemark || undefined);
+      if (response.error) {
+        if (response.status === 404) {
+          setTransferError('User with this ID does not exist');
+        } else if (response.status === 400) {
+          setTransferError('Not enough points for this transfer');
+        } else {
+          setTransferError(response.error);
+        }
+        return;
+      }
       // Refresh profile to get updated points balance
       await fetchProfile();
 
