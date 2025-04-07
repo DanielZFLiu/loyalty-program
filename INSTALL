@@ -92,7 +92,7 @@ Move the frontend build and start the backend.
 # Move frontend build to the served directory
 cd /home/ubuntu/loyalty-program/frontend
 sudo mkdir -p /var/www/loyalty-program/
-sudo cp -r frontend/dist/* /var/www/loyalty-program/
+sudo cp -r dist/* /var/www/loyalty-program/
 
 # Start backend
 cd /home/ubuntu/loyalty-program/backend
