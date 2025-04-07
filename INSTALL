@@ -1,6 +1,103 @@
-# This text file should explain how to deploy your website.
+# Deployment Guide
 
-# You should write detailed description on:
+#### This is a deployment guide explaining the packages you need to install and the various servers you need to configure.
 
-# 1. All the packages you need to install
-# 2. How to configure various servers (e.g., Nginx, Apache, etc)
+## Prerequisite: EC2 Setup
+
+The platform the team used to deploy the application is AWS EC2. Roughly, the setup process is as follows:
+- Launch Ubuntu 22.04 LTS instance (t2.micro)
+- Configure security groups:
+  - SSH (port 22)
+  - HTTP (port 80)
+- Assign Elastic IP
+- Connect via SSH
+
+## Step 1. Install System Packages
+
+Packages:
+- nodejs: JavaScript runtime for backend/frontend
+- npm: Node package manager
+- nginx: Web server and reverse proxy
+- pm2: Process manager for Node.js applications
+
+```bash
+sudo apt install -y nodejs npm nginx
+sudo npm install -g pm2
+```
+
+## Step 2. Clone Repository
+
+```bash
+cd /home/ubuntu
+git clone https://github.com/DanielZFLiu/loyalty-program.git
+```
+
+## Step 3. Backend Setup
+
+Install dependencies, set environment variables, and initialize Prisma database. The dependencies installed can be found in `backend/package.json`.
+
+```bash
+cd /home/ubuntu/loyalty-program/backend
+echo "NODE_ENV=production" > .env
+npm install
+
+npx prisma generate
+npx prisma db push
+node prisma/seed.js
+```
+
+## Step 4. Frontend Setup
+
+Install dependencies, set environment variables, and build the frontend. The dependencies installed can be found in `frontend/package.json`.
+
+```bash
+cd /home/ubuntu/loyalty-program/frontend
+echo "VITE_API_BASE_URL=http://<your-elastic-ip>:80/api" > .env
+npm install
+
+npm run build
+```
+
+## Step 5. Configure Nginx
+
+Add the following Nginx configuration to `/etc/nginx/sites-available/default`:
+
+```nginx
+server {
+  listen 80;
+  server_name <your-elastic-ip>;
+
+  root /var/www/loyalty-program;
+  index index.html;
+
+  location / {
+    try_files $uri /index.html;
+  }
+
+  location /api {
+    rewrite ^/api/(.*)$ /$1 break;
+    proxy_pass http://localhost:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+
+```
+
+## Step 6. Deploy
+
+Move the frontend build and start the backend.
+
+```bash
+# Move frontend build to the served directory
+cd /home/ubuntu/loyalty-program/frontend
+sudo mkdir -p /var/www/loyalty-program/
+sudo cp -r frontend/dist/* /var/www/loyalty-program/
+
+# Start backend
+cd /home/ubuntu/loyalty-program/backend
+npm run prod-start # Starts backend at port 3000 with pm2
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
