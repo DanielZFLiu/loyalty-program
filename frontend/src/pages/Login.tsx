@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {login} from '@/lib/api/auth';
+import { login } from '@/lib/api/auth';
 
 export function Login() {
   const [utorid, setUtorid] = useState('');
@@ -21,7 +21,7 @@ export function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('tokenExpiresAt', data.expiresAt);
       
-      navigate('/dashboard');
+      navigate('/');
       window.location.reload();
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Login failed');

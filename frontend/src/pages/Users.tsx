@@ -126,7 +126,7 @@ export function Users() {
   };
 
   const handleUserClick = (userId: number) => {
-    navigate(`/users/${userId}`);
+    navigate(`${window.location.pathname}/${userId}`);
   };
 
   // If not authorized, show nothing

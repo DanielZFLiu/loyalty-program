@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:3000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 interface LoginResponse {
   token: string;
@@ -82,7 +82,13 @@ export const api = {
     }),
 
   // User
-  getCurrentUser: () => fetchWrapper("/users/me"),
+  getCurrentUser: async () => {
+    const response = await fetchWrapper("/users/me");
+    if (response.status === 401) {
+      throw new Error("Unauthorized");
+    }
+    return response;
+  },
   updateProfile: (data: ProfileUpdateData) =>
     fetchWrapper("/users/me", {
       method: "PATCH",

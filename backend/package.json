@@ -4,8 +4,12 @@
   "description": "CSSU Reward System",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js 3000",
     "createsuperuser": "node prisma/createsu.js",
-    "clean": "rm -rf prisma/dev.db* node_modules package-lock.json prisma/migrations/"
+    "clean": "rm -rf prisma/dev.db* node_modules package-lock.json prisma/migrations/",
+    "prod-start": "pm2 start index.js --name 'loyalty-program' -- 3000",
+    "prod-stop": "pm2 stop 'loyalty-program'",
+    "prod-restart": "pm2 restart 'loyalty-program'"  
   },
   "author": "CSC309 Student, Winter 2025",
   "license": "ISC",

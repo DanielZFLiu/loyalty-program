@@ -12,6 +12,7 @@ import { Filter, X } from "lucide-react";
 
 export function PromotionFilters({
   onFilterChange,
+  userRole,
 }: {
   onFilterChange: (filters: {
     name?: string;
@@ -19,7 +20,9 @@ export function PromotionFilters({
     started?: boolean;
     ended?: boolean;
   }) => void;
+  userRole: "regular" | "manager" | "admin";
 }) {
+  const isManager = userRole === "manager" || userRole === "admin";
   const [isExpanded, setIsExpanded] = useState(false);
   const [name, setName] = useState<string>("");
   const [type, setType] = useState<"automatic" | "one-time" | undefined>(
@@ -32,23 +35,31 @@ export function PromotionFilters({
     onFilterChange({
       name: name || undefined,
       type,
-      started,
-      ended,
+      // Only include manager-specific filters if user is a manager
+      ...(isManager && { started, ended }),
     });
   };
 
   const handleResetFilters = () => {
     setName("");
     setType(undefined);
-    setStarted(undefined);
-    setEnded(undefined);
+    if (isManager) {
+      setStarted(undefined);
+      setEnded(undefined);
+    }
     onFilterChange({});
   };
 
   const hasActiveFilters = () => {
-    return (
-      name || type !== undefined || started !== undefined || ended !== undefined
-    );
+    if (isManager) {
+      return (
+        name || 
+        type !== undefined || 
+        started !== undefined || 
+        ended !== undefined
+      );
+    }
+    return name || type !== undefined;
   };
 
   return (
@@ -74,8 +85,7 @@ export function PromotionFilters({
                     setName("");
                     onFilterChange({
                       type,
-                      started,
-                      ended,
+                      ...(isManager && { started, ended }),
                     });
                   }}
                 />
@@ -90,14 +100,13 @@ export function PromotionFilters({
                     setType(undefined);
                     onFilterChange({
                       name: name || undefined,
-                      started,
-                      ended,
+                      ...(isManager && { started, ended }),
                     });
                   }}
                 />
               </div>
             )}
-            {started !== undefined && (
+            {isManager && started !== undefined && (
               <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center">
                 Started: {started ? "Yes" : "No"}
                 <X
@@ -113,7 +122,7 @@ export function PromotionFilters({
                 />
               </div>
             )}
-            {ended !== undefined && (
+            {isManager && ended !== undefined && (
               <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs flex items-center">
                 Ended: {ended ? "Yes" : "No"}
                 <X
@@ -175,47 +184,51 @@ export function PromotionFilters({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Started Status
-                </label>
-                <Select
-                  value={started === undefined ? "all" : String(started)}
-                  onValueChange={(value) =>
-                    setStarted(value === "all" ? undefined : value === "true")
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Started Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Promotions</SelectItem>
-                    <SelectItem value="true">Started</SelectItem>
-                    <SelectItem value="false">Not Started</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {isManager && (
+                <>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Started Status
+                    </label>
+                    <Select
+                      value={started === undefined ? "all" : String(started)}
+                      onValueChange={(value) =>
+                        setStarted(value === "all" ? undefined : value === "true")
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Started Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Promotions</SelectItem>
+                        <SelectItem value="true">Started</SelectItem>
+                        <SelectItem value="false">Not Started</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Ended Status
-                </label>
-                <Select
-                  value={ended === undefined ? "all" : String(ended)}
-                  onValueChange={(value) =>
-                    setEnded(value === "all" ? undefined : value === "true")
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Ended Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Promotions</SelectItem>
-                    <SelectItem value="true">Ended</SelectItem>
-                    <SelectItem value="false">Not Ended</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Ended Status
+                    </label>
+                    <Select
+                      value={ended === undefined ? "all" : String(ended)}
+                      onValueChange={(value) =>
+                        setEnded(value === "all" ? undefined : value === "true")
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Ended Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Promotions</SelectItem>
+                        <SelectItem value="true">Ended</SelectItem>
+                        <SelectItem value="false">Not Ended</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2 mt-4">

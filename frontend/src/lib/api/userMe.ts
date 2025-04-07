@@ -1,4 +1,5 @@
 import { fetchWrapper } from './fetchWrapper';
+import { Roles } from '../permissions';
 
 /* ================================
    TypeScript Interfaces
@@ -25,7 +26,7 @@ export interface User {
     name: string;
     email: string;
     birthday: string | null;
-    role: string;
+    role: Roles;
     points: number;
     createdAt: string;
     lastLogin: string | null;
@@ -127,7 +128,9 @@ export async function updateMe(data: {
 export async function updatePassword(
     oldPassword: string,
     newPassword: string
-): Promise<{ message: string }> {
+): Promise<{
+  error: any; message: string 
+}> {
     return await fetchWrapper("/users/me/password", {
         method: "PATCH",
         body: JSON.stringify({ old: oldPassword, new: newPassword }),

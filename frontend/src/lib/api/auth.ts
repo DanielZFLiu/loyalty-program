@@ -31,16 +31,25 @@ interface MessageResponse {
  * @returns A promise resolving to the token and expiration date.
  */
 export async function login(utorid: string, password: string): Promise<LoginResponse> {
+  try {
     const response = await fetchWrapper("/auth/tokens", {
-        method: "POST",
-        body: JSON.stringify({ utorid, password }),
+      method: "POST",
+      body: JSON.stringify({ utorid, password }),
     });
 
-    // Store the token and its expiration in localStorage
+    if (!response.token) {
+      throw new Error('Login failed: Invalid response from server');
+    }
+
     localStorage.setItem("token", response.token);
     localStorage.setItem("tokenExpiresAt", response.expiresAt);
 
     return response;
+  } catch (error) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("tokenExpiresAt");
+    throw error;
+  }
 }
 
 /**

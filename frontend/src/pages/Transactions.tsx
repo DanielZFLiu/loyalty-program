@@ -120,7 +120,7 @@ export function Transactions() {
   const handleTransactionClick = (transactionId: number) => {
     // Only managers can access transaction details
     if (isManager) {
-      navigate(`/transactions/${transactionId}`);
+      navigate(`${window.location.pathname}/${transactionId}`);
     }
   };
 

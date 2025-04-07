@@ -20,7 +20,7 @@ async function createPurchaseTransaction(req, res) {
     return res.status(400).json({ error: "missing required fields" });
   }
   if (typeof spent !== "number" || spent <= 0) {
-    return res.status(400).json({ error: "spent must be a number" });
+    return res.status(400).json({ error: "Amount spent must be >0" });
   }
 
   // Find customer by utorid
@@ -40,13 +40,13 @@ async function createPurchaseTransaction(req, res) {
       if (!promo) {
         return res
           .status(400)
-          .json({ error: `promotion id ${pid} does not exist` });
+          .json({ error: `promotion ${promo.name} does not exist` });
       }
       const now = new Date();
       if (promo.startTime > now || promo.endTime < now) {
         return res
           .status(400)
-          .json({ error: `promotion id ${pid} is expired or not active` });
+          .json({ error: `promotion ${promo.name} is expired or not active` });
       }
       if (promo.type === "ONE_TIME") {
         const userPromo = await prisma.userPromotion.findUnique({
@@ -57,15 +57,40 @@ async function createPurchaseTransaction(req, res) {
         if (userPromo && userPromo.used) {
           return res
             .status(400)
-            .json({ error: `promotion id ${pid} has already been used` });
+            .json({ error: `promotion "${promo.name}" has already been used. Please unselect that promotion and try again` });
         }
       }
       validPromotions.push(promo);
     }
   }
 
+  // Fetch automatic promotions
+  const automaticPromotions = await prisma.promotion.findMany({
+    where: {
+      type: 'AUTOMATIC',
+      startTime: { lte: new Date() },
+      endTime: { gte: new Date() },
+      OR: [
+        { minSpending: null },
+        { minSpending: { lte: spent } }
+      ]
+    }
+  });
+
+  const promotions = [...automaticPromotions, ...validPromotions];
+
   // Compute earned points (1 point per 25 cents spent, rounded)
-  const earned = Math.round(spent * 4);
+  let earned = Math.round(spent * 4);
+
+  // Add promotion points
+  for (const promotion of promotions) {
+    if (promotion.points) {
+      earned += promotion.points;
+    }
+    if (promotion.rate) {
+      earned += Math.round(spent * 100 * promotion.rate);
+    }
+  }
 
   // Fetch the full cashier record
   const cashier = await prisma.user.findUnique({ where: { id: req.user.id } });
@@ -95,8 +120,8 @@ async function createPurchaseTransaction(req, res) {
   }
 
   // Attach promotions to transaction
-  if (validPromotions.length > 0) {
-    for (const promo of validPromotions) {
+  if (promotions.length > 0) {
+    for (const promo of promotions) {
       try {
         await prisma.transactionPromotion.create({
           data: {
@@ -151,7 +176,7 @@ async function createPurchaseTransaction(req, res) {
     spent: spent,
     earned: creditedPoints,
     remark: remark || "",
-    promotionIds: validPromotions.map((p) => p.id),
+    promotionIds: promotions.map((p) => p.id),
     createdBy: cashier.utorid,
   });
 }

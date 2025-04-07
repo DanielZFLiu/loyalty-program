@@ -88,13 +88,13 @@ export function Promotions() {
 
   const handlePromotionClick = (id: number) => {
     if (isManager) {
-      navigate(`/promotions/${id}`);
+      navigate(`${window.location.pathname}/${id}`);
     }
   };
 
   const handleCreatePromotion = (promotionId: number) => {
     setCreateDialogOpen(false);
-    navigate(`/promotions/${promotionId}`);
+    navigate(`${window.location.pathname}/${promotionId}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -134,10 +134,21 @@ export function Promotions() {
         </CardHeader>
         <CardContent>
           {/* Only show filters if user is a manager or above */}
+          {/* Pass user role to the component */}
           {isManager && (
-            <PromotionFilters onFilterChange={handleFilterChange} />
+            <PromotionFilters 
+              onFilterChange={handleFilterChange} 
+              userRole="manager" 
+            />
           )}
 
+          {/* For regular users */}
+          {!isManager && (
+            <PromotionFilters 
+              onFilterChange={handleFilterChange} 
+              userRole="regular" 
+            />
+          )}
           {/* Loading and error states */}
           {loading && (
             <div className="text-center py-8">Loading promotions...</div>
