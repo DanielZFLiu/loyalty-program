@@ -68,9 +68,6 @@ export function Navbar({ user, onLogout }: NavbarProps) {
             <Link to="/manager/events" className="text-gray-600 hover:text-black">
               Events
             </Link>
-            <Link to="/manager/redeem" className="text-gray-600 hover:text-black">
-              Redeem Points
-            </Link>
             <Link to="/manager/users" className="text-gray-600 hover:text-black">
               Users
             </Link>
