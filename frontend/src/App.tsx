@@ -24,6 +24,7 @@ import { UserDetails } from "./pages/UserDetails";
 import { TransactionDetails } from "./pages/TransactionDetails";
 import { PromotionDetails } from "./components/managePromotions/PromotionDetails";
 import { ManagerDashboard } from "./pages/ManagerDashboard.tsx";
+import { UserRegistration } from "./pages/UserRegistration.tsx";
 
 function App() {
   const { user, loading, handleLogout } = useUser();
@@ -49,6 +50,7 @@ function App() {
     { path: "/cashier/profile", element: <Profile /> },
     { path: "/cashier/create-transaction", element: <CashierTransaction /> },
     { path: "/cashier/process-redemption", element: <CashierRedemption /> },
+    { path: "/cashier/registration", element: <UserRegistration /> },
   ];
 
   const managerRoutes = [
@@ -57,11 +59,15 @@ function App() {
     { path: "/manager/users", element: <Users /> },
     { path: "/manager/users/:userId", element: <UserDetails /> },
     { path: "/manager/transactions", element: <Transactions /> },
-    { path: "/manager/transactions/:transactionId", element: <TransactionDetails /> },
+    {
+      path: "/manager/transactions/:transactionId",
+      element: <TransactionDetails />,
+    },
     { path: "/manager/events", element: <Events /> },
     { path: "/manager/events/:eventId", element: <EventDetails /> },
     { path: "/manager/promotions", element: <Promotions /> },
     { path: "/manager/promotions/:promotionId", element: <PromotionDetails /> },
+    { path: "/manager/registration", element: <UserRegistration /> },
   ];
 
   return (
@@ -90,9 +96,11 @@ function App() {
               <Route
                 key={route.path}
                 path={route.path}
-                element={<ProtectedRoute clearance="REGULAR">
-                  {route.element}
-                </ProtectedRoute>}
+                element={
+                  <ProtectedRoute clearance="REGULAR">
+                    {route.element}
+                  </ProtectedRoute>
+                }
               />
             ))}
 
@@ -101,9 +109,11 @@ function App() {
               <Route
                 key={route.path}
                 path={route.path}
-                element={<ProtectedRoute clearance="CASHIER">
-                  {route.element}
-                </ProtectedRoute>}
+                element={
+                  <ProtectedRoute clearance="CASHIER">
+                    {route.element}
+                  </ProtectedRoute>
+                }
               />
             ))}
 
@@ -112,17 +122,16 @@ function App() {
               <Route
                 key={route.path}
                 path={route.path}
-                element={<ProtectedRoute clearance="MANAGER">
-                  {route.element}
-                </ProtectedRoute>}
+                element={
+                  <ProtectedRoute clearance="MANAGER">
+                    {route.element}
+                  </ProtectedRoute>
+                }
               />
             ))}
 
             {/* Catch-all route */}
-            <Route 
-              path="*" 
-              element={<Navigate to="/" replace />} 
-            />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>

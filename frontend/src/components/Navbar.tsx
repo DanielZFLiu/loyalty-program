@@ -51,6 +51,9 @@ export function Navbar({ user, onLogout }: NavbarProps) {
             <Link to="/cashier/process-redemption" className="text-gray-600 hover:text-black">
               Process Redemption
             </Link>
+            <Link to="/cashier/registration" className="text-gray-600 hover:text-black">
+              User Registration
+            </Link>
           </>
         );
       case 'MANAGER':
@@ -70,6 +73,9 @@ export function Navbar({ user, onLogout }: NavbarProps) {
             </Link>
             <Link to="/manager/users" className="text-gray-600 hover:text-black">
               Users
+            </Link>
+            <Link to="/manager/registration" className="text-gray-600 hover:text-black">
+              User Registration
             </Link>
           </>
         );
