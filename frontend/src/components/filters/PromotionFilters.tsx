@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 export function PromotionFilters({
   onFilterChange,
@@ -22,22 +23,115 @@ export function PromotionFilters({
   }) => void;
   userRole: "regular" | "manager" | "admin";
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const isManager = userRole === "manager" || userRole === "admin";
   const [isExpanded, setIsExpanded] = useState(false);
-  const [name, setName] = useState<string>("");
+
+  // Initialize state from URL query parameters
+  const [name, setName] = useState<string>(searchParams.get("name") || "");
   const [type, setType] = useState<"automatic" | "one-time" | undefined>(
-    undefined
+    (searchParams.get("type") as "automatic" | "one-time") || undefined
   );
-  const [started, setStarted] = useState<boolean | undefined>(undefined);
-  const [ended, setEnded] = useState<boolean | undefined>(undefined);
+  const [started, setStarted] = useState<boolean | undefined>(
+    searchParams.has("started")
+      ? searchParams.get("started") === "true"
+      : undefined
+  );
+  const [ended, setEnded] = useState<boolean | undefined>(
+    searchParams.has("ended") ? searchParams.get("ended") === "true" : undefined
+  );
+
+  // Initialize filters on component mount
+  useEffect(() => {
+    // Only apply filters from URL on initial load if there are any params
+    if (searchParams.toString()) {
+      const initialFilters: {
+        name?: string;
+        type?: "automatic" | "one-time";
+        started?: boolean;
+        ended?: boolean;
+      } = {};
+
+      if (searchParams.has("name")) {
+        initialFilters.name = searchParams.get("name") || undefined;
+      }
+
+      if (searchParams.has("type")) {
+        const typeValue = searchParams.get("type");
+        if (typeValue === "automatic" || typeValue === "one-time") {
+          initialFilters.type = typeValue;
+        }
+      }
+
+      // Only include manager-specific filters if user is a manager
+      if (isManager) {
+        if (searchParams.has("started")) {
+          initialFilters.started = searchParams.get("started") === "true";
+        }
+
+        if (searchParams.has("ended")) {
+          initialFilters.ended = searchParams.get("ended") === "true";
+        }
+      }
+
+      // Notify parent component of initial filters
+      onFilterChange(initialFilters);
+
+      // If there are any filters in the URL, expand the filter panel
+      if (Object.keys(initialFilters).length > 0) {
+        setIsExpanded(true);
+      }
+    }
+  }, []);
+
+  const updateSearchParams = (filters: {
+    name?: string;
+    type?: "automatic" | "one-time";
+    started?: boolean;
+    ended?: boolean;
+  }) => {
+    const newSearchParams = new URLSearchParams();
+
+    if (filters.name) {
+      newSearchParams.set("name", filters.name);
+    }
+
+    if (filters.type) {
+      newSearchParams.set("type", filters.type);
+    }
+
+    // Only include manager-specific filters if user is a manager
+    if (isManager) {
+      if (filters.started !== undefined) {
+        newSearchParams.set("started", String(filters.started));
+      }
+
+      if (filters.ended !== undefined) {
+        newSearchParams.set("ended", String(filters.ended));
+      }
+    }
+
+    setSearchParams(newSearchParams);
+  };
 
   const handleApplyFilters = () => {
-    onFilterChange({
+    const filters: {
+      name?: string;
+      type?: "automatic" | "one-time";
+      started?: boolean;
+      ended?: boolean;
+    } = {
       name: name || undefined,
       type,
       // Only include manager-specific filters if user is a manager
       ...(isManager && { started, ended }),
-    });
+    };
+
+    // Update URL query parameters
+    updateSearchParams(filters);
+
+    // Notify parent component
+    onFilterChange(filters);
   };
 
   const handleResetFilters = () => {
@@ -47,15 +141,49 @@ export function PromotionFilters({
       setStarted(undefined);
       setEnded(undefined);
     }
+
+    // Clear URL query parameters
+    setSearchParams(new URLSearchParams());
+
+    // Notify parent component
     onFilterChange({});
+  };
+
+  const handleRemoveFilter = (filterName: string) => {
+    const newFilters: {
+      name?: string;
+      type?: "automatic" | "one-time";
+      started?: boolean;
+      ended?: boolean;
+    } = {
+      name: name || undefined,
+      type,
+      // Only include manager-specific filters if user is a manager
+      ...(isManager && { started, ended }),
+    };
+
+    // Remove the specified filter
+    delete newFilters[filterName as keyof typeof newFilters];
+
+    // Update component state based on the filter being removed
+    if (filterName === "name") setName("");
+    if (filterName === "type") setType(undefined);
+    if (filterName === "started") setStarted(undefined);
+    if (filterName === "ended") setEnded(undefined);
+
+    // Update URL query parameters
+    updateSearchParams(newFilters);
+
+    // Notify parent component
+    onFilterChange(newFilters);
   };
 
   const hasActiveFilters = () => {
     if (isManager) {
       return (
-        name || 
-        type !== undefined || 
-        started !== undefined || 
+        name ||
+        type !== undefined ||
+        started !== undefined ||
         ended !== undefined
       );
     }
@@ -81,13 +209,7 @@ export function PromotionFilters({
                 Name: {name}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setName("");
-                    onFilterChange({
-                      type,
-                      ...(isManager && { started, ended }),
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("name")}
                 />
               </div>
             )}
@@ -96,13 +218,7 @@ export function PromotionFilters({
                 Type: {type}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setType(undefined);
-                    onFilterChange({
-                      name: name || undefined,
-                      ...(isManager && { started, ended }),
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("type")}
                 />
               </div>
             )}
@@ -111,14 +227,7 @@ export function PromotionFilters({
                 Started: {started ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setStarted(undefined);
-                    onFilterChange({
-                      name: name || undefined,
-                      type,
-                      ended,
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("started")}
                 />
               </div>
             )}
@@ -127,14 +236,7 @@ export function PromotionFilters({
                 Ended: {ended ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setEnded(undefined);
-                    onFilterChange({
-                      name: name || undefined,
-                      type,
-                      started,
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("ended")}
                 />
               </div>
             )}
@@ -193,7 +295,9 @@ export function PromotionFilters({
                     <Select
                       value={started === undefined ? "all" : String(started)}
                       onValueChange={(value) =>
-                        setStarted(value === "all" ? undefined : value === "true")
+                        setStarted(
+                          value === "all" ? undefined : value === "true"
+                        )
                       }
                     >
                       <SelectTrigger>

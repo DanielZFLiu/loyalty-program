@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 export function UserFilters({
   onFilterChange,
@@ -20,19 +21,100 @@ export function UserFilters({
     activated?: boolean;
   }) => void;
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [name, setName] = useState<string>("");
-  const [role, setRole] = useState<string>("");
-  const [verified, setVerified] = useState<boolean | undefined>(undefined);
-  const [activated, setActivated] = useState<boolean | undefined>(undefined);
+
+  // Initialize state from URL query parameters
+  const [name, setName] = useState<string>(searchParams.get("name") || "");
+  const [role, setRole] = useState<string>(searchParams.get("role") || "");
+  const [verified, setVerified] = useState<boolean | undefined>(
+    searchParams.has("verified")
+      ? searchParams.get("verified") === "true"
+      : undefined
+  );
+  const [activated, setActivated] = useState<boolean | undefined>(
+    searchParams.has("activated")
+      ? searchParams.get("activated") === "true"
+      : undefined
+  );
+
+  // Initialize filters on component mount
+  useEffect(() => {
+    // Only apply filters from URL on initial load if there are any params
+    if (searchParams.toString()) {
+      const initialFilters: {
+        name?: string;
+        role?: string;
+        verified?: boolean;
+        activated?: boolean;
+      } = {};
+
+      if (searchParams.has("name")) {
+        initialFilters.name = searchParams.get("name") || undefined;
+      }
+
+      if (searchParams.has("role")) {
+        initialFilters.role = searchParams.get("role") || undefined;
+      }
+
+      if (searchParams.has("verified")) {
+        initialFilters.verified = searchParams.get("verified") === "true";
+      }
+
+      if (searchParams.has("activated")) {
+        initialFilters.activated = searchParams.get("activated") === "true";
+      }
+
+      // Notify parent component of initial filters
+      onFilterChange(initialFilters);
+
+      // If there are any filters in the URL, expand the filter panel
+      if (Object.keys(initialFilters).length > 0) {
+        setIsExpanded(true);
+      }
+    }
+  }, []);
+
+  const updateSearchParams = (filters: {
+    name?: string;
+    role?: string;
+    verified?: boolean;
+    activated?: boolean;
+  }) => {
+    const newSearchParams = new URLSearchParams();
+
+    if (filters.name) {
+      newSearchParams.set("name", filters.name);
+    }
+
+    if (filters.role) {
+      newSearchParams.set("role", filters.role);
+    }
+
+    if (filters.verified !== undefined) {
+      newSearchParams.set("verified", String(filters.verified));
+    }
+
+    if (filters.activated !== undefined) {
+      newSearchParams.set("activated", String(filters.activated));
+    }
+
+    setSearchParams(newSearchParams);
+  };
 
   const handleApplyFilters = () => {
-    onFilterChange({
+    const filters = {
       name: name || undefined,
       role: role || undefined,
       verified,
       activated,
-    });
+    };
+
+    // Update URL query parameters
+    updateSearchParams(filters);
+
+    // Notify parent component
+    onFilterChange(filters);
   };
 
   const handleResetFilters = () => {
@@ -40,7 +122,36 @@ export function UserFilters({
     setRole("");
     setVerified(undefined);
     setActivated(undefined);
+
+    // Clear URL query parameters
+    setSearchParams(new URLSearchParams());
+
+    // Notify parent component
     onFilterChange({});
+  };
+
+  const handleRemoveFilter = (filterName: string) => {
+    const newFilters = {
+      name: name || undefined,
+      role: role || undefined,
+      verified,
+      activated,
+    };
+
+    // Remove the specified filter
+    delete newFilters[filterName as keyof typeof newFilters];
+
+    // Update component state based on the filter being removed
+    if (filterName === "name") setName("");
+    if (filterName === "role") setRole("");
+    if (filterName === "verified") setVerified(undefined);
+    if (filterName === "activated") setActivated(undefined);
+
+    // Update URL query parameters
+    updateSearchParams(newFilters);
+
+    // Notify parent component
+    onFilterChange(newFilters);
   };
 
   const hasActiveFilters = () => {
@@ -66,14 +177,7 @@ export function UserFilters({
                 Name: {name}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setName("");
-                    onFilterChange({
-                      role: role || undefined,
-                      verified,
-                      activated,
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("name")}
                 />
               </div>
             )}
@@ -82,14 +186,7 @@ export function UserFilters({
                 Role: {role}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setRole("");
-                    onFilterChange({
-                      name: name || undefined,
-                      verified,
-                      activated,
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("role")}
                 />
               </div>
             )}
@@ -98,14 +195,7 @@ export function UserFilters({
                 Verified: {verified ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setVerified(undefined);
-                    onFilterChange({
-                      name: name || undefined,
-                      role: role || undefined,
-                      activated,
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("verified")}
                 />
               </div>
             )}
@@ -114,14 +204,7 @@ export function UserFilters({
                 Activated: {activated ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setActivated(undefined);
-                    onFilterChange({
-                      name: name || undefined,
-                      role: role || undefined,
-                      verified,
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("activated")}
                 />
               </div>
             )}

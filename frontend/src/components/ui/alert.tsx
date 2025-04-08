@@ -14,11 +14,11 @@ export const Alert: React.FC<AlertProps> = ({ variant = 'default', children, cla
   );
 };
 
-export const AlertTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <h2 className="alert-title">{children}</h2>
+export const AlertTitle: React.FC<{ children: React.ReactNode, classes?: string }> = ({ children, classes = "" }) => (
+  <h2 className={`alert-title ${classes}`}>{children}</h2>
 );
 
-export const AlertDescription: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="alert-description">{children}</p>
+export const AlertDescription: React.FC<{ children: React.ReactNode, classes?: string }> = ({ children, classes = "" }) => (
+  <p className={`alert-description ${classes}`}>{children}</p>
 ); 
 
