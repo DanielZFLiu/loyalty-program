@@ -12,10 +12,12 @@ import {
 import { checkRole } from "@/lib/api/util";
 import { EventActionDialogs } from "@/components/manageEvents/EventActionDialogs";
 import { EventInformation } from "@/components/manageEvents/EventInformation";
+import { useUser } from "@/contexts/UserContext";
 
 export function EventDetails() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const { user } = useUser();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,8 @@ export function EventDetails() {
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isManager, setIsManager] = useState(false);
+  const [isOrganizer, setIsOrganizer] = useState(false);
+  const [hasManagerAccess, setHasManagerAccess] = useState(false);
 
   // State for manager action dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -60,6 +64,16 @@ export function EventDetails() {
     return isManagerOrAbove;
   };
 
+  const checkOrganizerStatus = (eventData: EventDetail) => {
+    if (!eventData.organizers || !user) {
+      return false;
+    }
+
+    const isEventOrganizer = eventData.organizers.some(organizer => organizer.utorid === user.utorid);
+    setIsOrganizer(isEventOrganizer);
+    return isEventOrganizer;
+  };
+
   useEffect(() => {
     const fetchEventDetails = async () => {
       setLoading(true);
@@ -84,12 +98,16 @@ export function EventDetails() {
           return;
         }
 
-        setEvent(response);
+        // Determine if user has manager-level access (either manager or organizer)
+        const managerAccess = isManager || checkOrganizerStatus(response);
+        setHasManagerAccess(managerAccess);
 
-        // If the user is not a manager, check the RSVP status
-        if (!isManager) {
+        // If the user doesn't have manager access, check the RSVP status
+        if (!managerAccess) {
           await checkRsvpStatus();
         }
+
+        setEvent(response);
       } catch (error) {
         console.error("Error fetching event details:", error);
         setError("Failed to load event details. Please try again later.");
@@ -261,6 +279,8 @@ export function EventDetails() {
           <EventInformation
             event={event}
             isManager={isManager}
+            isOrganizer={isOrganizer}
+            hasManagerAccess={hasManagerAccess}
             rsvpStatus={rsvpStatus}
             rsvpLoading={rsvpLoading}
             isEventFull={isEventFull}
@@ -295,10 +315,11 @@ export function EventDetails() {
         </CardContent>
       </Card>
 
-      {/* Manager action dialogs */}
-      {isManager && (
+      {/* Manager/Organizer action dialogs */}
+      {hasManagerAccess && event && (
         <EventActionDialogs
           event={event}
+          isManager={isManager}
           editDialogOpen={editDialogOpen}
           setEditDialogOpen={setEditDialogOpen}
           deleteDialogOpen={deleteDialogOpen}

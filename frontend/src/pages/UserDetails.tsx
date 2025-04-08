@@ -78,7 +78,7 @@ export function UserDetails() {
       setStatusMessage("User updated successfully!");
     } catch (error) {
       console.error("Error updating user:", error);
-      setError("Failed to update user. Please try again.");
+      setError(`Failed to update user. ${error}`);
     }
   };
 
@@ -123,7 +123,7 @@ export function UserDetails() {
             <div className="bg-red-100 text-red-800 p-4 rounded-md">
               {error || "User not found"}
             </div>
-            <Button className="mt-4" onClick={() => navigate("/users")}>
+            <Button className="mt-4" onClick={() => navigate("/manager/users")}>
               Back to Users
             </Button>
           </CardContent>
@@ -309,7 +309,7 @@ export function UserDetails() {
         </CardContent>
 
         <CardFooter>
-          <Button variant="outline" onClick={() => navigate("/users")}>
+          <Button variant="outline" onClick={() => navigate("/manager/users")}>
             Back to Users
           </Button>
         </CardFooter>

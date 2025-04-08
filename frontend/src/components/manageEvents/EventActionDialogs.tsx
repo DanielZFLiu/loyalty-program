@@ -22,6 +22,7 @@ import {
 
 interface EventActionDialogsProps {
   event: Event;
+  isManager?: boolean;
   editDialogOpen: boolean;
   setEditDialogOpen: (open: boolean) => void;
   deleteDialogOpen: boolean;
@@ -38,6 +39,7 @@ interface EventActionDialogsProps {
 
 export function EventActionDialogs({
   event,
+  isManager = false,
   editDialogOpen,
   setEditDialogOpen,
   deleteDialogOpen,
@@ -74,6 +76,13 @@ export function EventActionDialogs({
 
   const handleDeleteEvent = async () => {
     setDeleteLoading(true);
+    
+    // Only managers should be able to delete events
+    if (!isManager) {
+      onError("You don't have permission to delete this event. Only managers can delete events.");
+      setDeleteLoading(false);
+      return;
+    }
 
     try {
       await deleteEvent(eventId);

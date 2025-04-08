@@ -134,8 +134,14 @@ export async function getUser(userId: number): Promise<User> {
  * @returns A promise resolving to the updated user details.
  */
 export async function updateUser(userId: number, data: UpdateUserInput): Promise<UpdateUserResponse> {
-    return await fetchWrapper(`/users/${userId}`, {
+    const response = await fetchWrapper(`/users/${userId}`, {
         method: "PATCH",
         body: JSON.stringify(data),
     });
+    
+    if ('error' in response) {
+        throw new Error(response.error);
+    }
+    
+    return response;
 }

@@ -438,6 +438,7 @@ async function listTransactions(req, res) {
       remark: tx.remark,
       relatedId: tx.relatedId,
       createdBy: tx.createdBy ? tx.createdBy.utorid : null,
+      createdAt: tx.createdAt,
     }));
     return res.json({ count, results });
   } catch (error) {
@@ -479,7 +480,8 @@ async function getTransaction(req, res) {
       suspicious: tx.suspicious,
       remark: tx.remark || "",
       createdBy: tx.createdBy ? tx.createdBy.utorid : null,
-      relatedId: tx.relatedId
+      relatedId: tx.relatedId,
+      createdAt: tx.createdAt,
     });
   } catch (error) {
     console.error(error);

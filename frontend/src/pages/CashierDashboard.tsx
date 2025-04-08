@@ -16,7 +16,6 @@ interface CashierProfile {
 
 const CashierDashboard = () => {
   const [profile, setProfile] = useState<CashierProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -27,8 +26,6 @@ const CashierDashboard = () => {
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -160,24 +157,6 @@ const CashierDashboard = () => {
           </Card>
         </Link>
       </div>
-
-      {/* Status Card */}
-      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3">
-            <div
-              className={`h-3 w-3 rounded-full ${
-                loading ? "bg-yellow-500" : "bg-green-500"
-              }`}
-            ></div>
-            <p className="text-sm font-medium">
-              {loading
-                ? "Connecting to system..."
-                : "System ready for transactions"}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
