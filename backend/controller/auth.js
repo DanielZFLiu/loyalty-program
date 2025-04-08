@@ -3,7 +3,7 @@ const prisma = new PrismaClient()
 const jwt = require('jsonwebtoken')
 const uuid = require('uuid')
 
-const SECRET_KEY = 'jwt_secret'
+const SECRET_KEY = process.env.JWT_SECRET || 'jwt_secret'
 
 // in-memory rate limiter for password reset requests
 const resetRateLimit = {}
