@@ -1,20 +1,21 @@
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Filter, X } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/select";
+import { Filter, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useSearchParams } from "react-router-dom";
 
 export function TransactionFilters({
   onFilterChange,
-  filterMode
+  filterMode,
 }: {
   onFilterChange: (filters: {
     name?: string;
@@ -24,29 +25,166 @@ export function TransactionFilters({
     relatedId?: number;
     promotionId?: number;
     amount?: number;
-    operator?: 'gte' | 'lte';
+    operator?: "gte" | "lte";
   }) => void;
-  filterMode: "partial" | "all" // partial: user, cashier; all: manager, superuser
+  filterMode: "partial" | "all"; // partial: user, cashier; all: manager, superuser
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [relatedId, setRelatedId] = useState<number | undefined>(undefined);
-  const [promotionId, setPromotionId] = useState<number | undefined>(undefined);
-  const [amount, setAmount] = useState<number | undefined>(undefined);
-  const [operator, setOperator] = useState<string>('gte');
+
+  // Initialize state from URL query parameters
+  const [typeFilter, setTypeFilter] = useState(
+    searchParams.get("typeFilter") || "all"
+  );
+  const [relatedId, setRelatedId] = useState<number | undefined>(
+    searchParams.has("relatedId")
+      ? Number(searchParams.get("relatedId"))
+      : undefined
+  );
+  const [promotionId, setPromotionId] = useState<number | undefined>(
+    searchParams.has("promotionId")
+      ? Number(searchParams.get("promotionId"))
+      : undefined
+  );
+  const [amount, setAmount] = useState<number | undefined>(
+    searchParams.has("amount") ? Number(searchParams.get("amount")) : undefined
+  );
+  const [operator, setOperator] = useState<string>(
+    searchParams.get("operator") || "gte"
+  );
 
   // New state for "all" filter mode
-  const [name, setName] = useState<string>('');
-  const [createdBy, setCreatedBy] = useState<string>('');
-  const [suspicious, setSuspicious] = useState<boolean>(false);
+  const [name, setName] = useState<string>(searchParams.get("name") || "");
+  const [createdBy, setCreatedBy] = useState<string>(
+    searchParams.get("createdBy") || ""
+  );
+  const [suspicious, setSuspicious] = useState<boolean>(
+    searchParams.get("suspicious") === "true"
+  );
+
+  // Initialize filters on component mount
+  useEffect(() => {
+    // Only apply filters from URL on initial load if there are any params
+    if (searchParams.toString()) {
+      const initialFilters: {
+        name?: string;
+        createdBy?: string;
+        suspicious?: boolean;
+        typeFilter?: string;
+        relatedId?: number;
+        promotionId?: number;
+        amount?: number;
+        operator?: "gte" | "lte";
+      } = {};
+
+      if (
+        searchParams.has("typeFilter") &&
+        searchParams.get("typeFilter") !== "all"
+      ) {
+        initialFilters.typeFilter = searchParams.get("typeFilter") || undefined;
+      }
+
+      if (searchParams.has("relatedId")) {
+        initialFilters.relatedId = Number(searchParams.get("relatedId"));
+      }
+
+      if (searchParams.has("promotionId")) {
+        initialFilters.promotionId = Number(searchParams.get("promotionId"));
+      }
+
+      if (searchParams.has("amount")) {
+        initialFilters.amount = Number(searchParams.get("amount"));
+      }
+
+      if (searchParams.has("operator")) {
+        const op = searchParams.get("operator");
+        if (op === "gte" || op === "lte") {
+          initialFilters.operator = op;
+        }
+      }
+
+      // Add additional filters for "all" mode
+      if (filterMode === "all") {
+        if (searchParams.has("name")) {
+          initialFilters.name = searchParams.get("name") || undefined;
+        }
+
+        if (searchParams.has("createdBy")) {
+          initialFilters.createdBy = searchParams.get("createdBy") || undefined;
+        }
+
+        if (searchParams.has("suspicious")) {
+          initialFilters.suspicious = searchParams.get("suspicious") === "true";
+        }
+      }
+
+      // Notify parent component of initial filters
+      onFilterChange(initialFilters);
+
+      // If there are any filters in the URL, expand the filter panel
+      if (Object.keys(initialFilters).length > 0) {
+        setIsExpanded(true);
+      }
+    }
+  }, []);
+
+  const updateSearchParams = (filters: {
+    name?: string;
+    createdBy?: string;
+    suspicious?: boolean;
+    typeFilter?: string;
+    relatedId?: number;
+    promotionId?: number;
+    amount?: number;
+    operator?: "gte" | "lte";
+  }) => {
+    const newSearchParams = new URLSearchParams();
+
+    if (filters.typeFilter && filters.typeFilter !== "all") {
+      newSearchParams.set("typeFilter", filters.typeFilter);
+    }
+
+    if (filters.relatedId !== undefined) {
+      newSearchParams.set("relatedId", String(filters.relatedId));
+    }
+
+    if (filters.promotionId !== undefined) {
+      newSearchParams.set("promotionId", String(filters.promotionId));
+    }
+
+    if (filters.amount !== undefined) {
+      newSearchParams.set("amount", String(filters.amount));
+    }
+
+    if (filters.operator) {
+      newSearchParams.set("operator", filters.operator);
+    }
+
+    // Add additional filters for "all" mode
+    if (filterMode === "all") {
+      if (filters.name) {
+        newSearchParams.set("name", filters.name);
+      }
+
+      if (filters.createdBy) {
+        newSearchParams.set("createdBy", filters.createdBy);
+      }
+
+      if (filters.suspicious) {
+        newSearchParams.set("suspicious", String(filters.suspicious));
+      }
+    }
+
+    setSearchParams(newSearchParams);
+  };
 
   const handleApplyFilters = () => {
     const filters = {
-      typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
+      typeFilter: typeFilter !== "all" ? typeFilter : undefined,
       relatedId,
       promotionId,
       amount,
-      operator: operator as 'gte' | 'lte'
+      operator: operator as "gte" | "lte",
     };
 
     // Add additional filters for "all" mode
@@ -54,31 +192,87 @@ export function TransactionFilters({
       Object.assign(filters, {
         name: name || undefined,
         createdBy: createdBy || undefined,
-        suspicious: suspicious || undefined
+        suspicious: suspicious || undefined,
       });
     }
 
+    // Update URL query parameters
+    updateSearchParams(filters);
+
+    // Notify parent component
     onFilterChange(filters);
   };
 
   const handleResetFilters = () => {
-    setTypeFilter('all');
+    setTypeFilter("all");
     setRelatedId(undefined);
     setPromotionId(undefined);
     setAmount(undefined);
-    setOperator('gte');
+    setOperator("gte");
 
     // Reset additional filters for "all" mode
-    setName('');
-    setCreatedBy('');
+    setName("");
+    setCreatedBy("");
     setSuspicious(false);
 
+    // Clear URL query parameters
+    setSearchParams(new URLSearchParams());
+
+    // Notify parent component
     onFilterChange({});
   };
 
+  const handleRemoveFilter = (filterName: string) => {
+    const newFilters: {
+      name?: string;
+      createdBy?: string;
+      suspicious?: boolean;
+      typeFilter?: string;
+      relatedId?: number;
+      promotionId?: number;
+      amount?: number;
+      operator?: "gte" | "lte";
+    } = {
+      typeFilter: typeFilter !== "all" ? typeFilter : undefined,
+      relatedId,
+      promotionId,
+      amount,
+      operator: operator as "gte" | "lte",
+    };
+
+    // Add additional filters for "all" mode
+    if (filterMode === "all") {
+      Object.assign(newFilters, {
+        name: name || undefined,
+        createdBy: createdBy || undefined,
+        suspicious: suspicious || undefined,
+      });
+    }
+
+    // Remove the specified filter
+    delete newFilters[filterName as keyof typeof newFilters];
+
+    // Update component state based on the filter being removed
+    if (filterName === "typeFilter") setTypeFilter("all");
+    if (filterName === "relatedId") setRelatedId(undefined);
+    if (filterName === "promotionId") setPromotionId(undefined);
+    if (filterName === "amount") setAmount(undefined);
+    if (filterName === "name") setName("");
+    if (filterName === "createdBy") setCreatedBy("");
+    if (filterName === "suspicious") setSuspicious(false);
+
+    // Update URL query parameters
+    updateSearchParams(newFilters);
+
+    // Notify parent component
+    onFilterChange(newFilters);
+  };
+
   const hasActiveFilters = () => {
-    const baseFilters = typeFilter !== 'all' || relatedId || promotionId || amount;
-    const advancedFilters = filterMode === "all" && (name || createdBy || suspicious);
+    const baseFilters =
+      typeFilter !== "all" || relatedId || promotionId || amount;
+    const advancedFilters =
+      filterMode === "all" && (name || createdBy || suspicious);
     return baseFilters || advancedFilters;
   };
 
@@ -96,28 +290,12 @@ export function TransactionFilters({
         </Button>
         {hasActiveFilters() && (
           <div className="flex flex-wrap gap-2">
-            {typeFilter !== 'all' && (
+            {typeFilter !== "all" && (
               <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex items-center">
                 Type: {typeFilter}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setTypeFilter('all');
-                    onFilterChange({
-                      ...{
-                        relatedId,
-                        promotionId,
-                        amount,
-                        operator: operator as 'gte' | 'lte',
-                        ...(filterMode === "all" && {
-                          name: name || undefined,
-                          createdBy: createdBy || undefined,
-                          suspicious: suspicious || undefined
-                        })
-                      },
-                      typeFilter: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("typeFilter")}
                 />
               </div>
             )}
@@ -126,23 +304,7 @@ export function TransactionFilters({
                 Related ID: {relatedId}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setRelatedId(undefined);
-                    onFilterChange({
-                      ...{
-                        typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
-                        promotionId,
-                        amount,
-                        operator: operator as 'gte' | 'lte',
-                        ...(filterMode === "all" && {
-                          name: name || undefined,
-                          createdBy: createdBy || undefined,
-                          suspicious: suspicious || undefined
-                        })
-                      },
-                      relatedId: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("relatedId")}
                 />
               </div>
             )}
@@ -151,48 +313,16 @@ export function TransactionFilters({
                 Promotion ID: {promotionId}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setPromotionId(undefined);
-                    onFilterChange({
-                      ...{
-                        typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
-                        relatedId,
-                        amount,
-                        operator: operator as 'gte' | 'lte',
-                        ...(filterMode === "all" && {
-                          name: name || undefined,
-                          createdBy: createdBy || undefined,
-                          suspicious: suspicious || undefined
-                        })
-                      },
-                      promotionId: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("promotionId")}
                 />
               </div>
             )}
             {amount && (
               <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Amount {operator === 'gte' ? '>=' : '<='}: {amount}
+                Amount {operator === "gte" ? ">=" : "<="}: {amount}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setAmount(undefined);
-                    onFilterChange({
-                      ...{
-                        typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
-                        relatedId,
-                        promotionId,
-                        operator: operator as 'gte' | 'lte',
-                        ...(filterMode === "all" && {
-                          name: name || undefined,
-                          createdBy: createdBy || undefined,
-                          suspicious: suspicious || undefined
-                        })
-                      },
-                      amount: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("amount")}
                 />
               </div>
             )}
@@ -203,21 +333,7 @@ export function TransactionFilters({
                 Name: {name}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setName('');
-                    onFilterChange({
-                      ...{
-                        typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
-                        relatedId,
-                        promotionId,
-                        amount,
-                        operator: operator as 'gte' | 'lte',
-                        createdBy: createdBy || undefined,
-                        suspicious: suspicious || undefined
-                      },
-                      name: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("name")}
                 />
               </div>
             )}
@@ -226,21 +342,7 @@ export function TransactionFilters({
                 Created By: {createdBy}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setCreatedBy('');
-                    onFilterChange({
-                      ...{
-                        typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
-                        relatedId,
-                        promotionId,
-                        amount,
-                        operator: operator as 'gte' | 'lte',
-                        name: name || undefined,
-                        suspicious: suspicious || undefined
-                      },
-                      createdBy: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("createdBy")}
                 />
               </div>
             )}
@@ -249,21 +351,7 @@ export function TransactionFilters({
                 Suspicious: Yes
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setSuspicious(false);
-                    onFilterChange({
-                      ...{
-                        typeFilter: typeFilter !== 'all' ? typeFilter : undefined,
-                        relatedId,
-                        promotionId,
-                        amount,
-                        operator: operator as 'gte' | 'lte',
-                        name: name || undefined,
-                        createdBy: createdBy || undefined
-                      },
-                      suspicious: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("suspicious")}
                 />
               </div>
             )}
@@ -311,7 +399,10 @@ export function TransactionFilters({
                         checked={suspicious}
                         onCheckedChange={setSuspicious}
                       />
-                      <Label htmlFor="suspicious" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="suspicious"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Show Suspicious Only
                       </Label>
                     </div>
@@ -345,15 +436,15 @@ export function TransactionFilters({
                 <input
                   type="number"
                   placeholder="Enter Related ID (Used with Type)"
-                  value={relatedId === undefined ? '' : relatedId}
+                  value={relatedId === undefined ? "" : relatedId}
                   onChange={(e) => {
                     const value = Number(e.target.value);
-                    if (value >= 0 || e.target.value === '') {
+                    if (value >= 0 || e.target.value === "") {
                       setRelatedId(e.target.value ? value : undefined);
                     }
                   }}
                   className="w-full border rounded-md p-2 text-sm"
-                  disabled={typeFilter === 'all'}
+                  disabled={typeFilter === "all"}
                 />
               </div>
 
@@ -364,10 +455,10 @@ export function TransactionFilters({
                 <input
                   type="number"
                   placeholder="Enter Promotion ID"
-                  value={promotionId === undefined ? '' : promotionId}
+                  value={promotionId === undefined ? "" : promotionId}
                   onChange={(e) => {
                     const value = Number(e.target.value);
-                    if (value >= 0 || e.target.value === '') {
+                    if (value >= 0 || e.target.value === "") {
                       setPromotionId(e.target.value ? value : undefined);
                     }
                   }}
@@ -380,7 +471,10 @@ export function TransactionFilters({
                   Amount Filter
                 </label>
                 <div className="flex items-center space-x-2">
-                  <Select value={operator} onValueChange={(value) => setOperator(value)}>
+                  <Select
+                    value={operator}
+                    onValueChange={(value) => setOperator(value)}
+                  >
                     <SelectTrigger className="w-24">
                       <SelectValue placeholder="Operator" />
                     </SelectTrigger>
@@ -392,10 +486,10 @@ export function TransactionFilters({
                   <input
                     type="number"
                     placeholder="Amount"
-                    value={amount === undefined ? '' : amount}
+                    value={amount === undefined ? "" : amount}
                     onChange={(e) => {
                       const value = Number(e.target.value);
-                      if (value >= 0 || e.target.value === '') {
+                      if (value >= 0 || e.target.value === "") {
                         setAmount(e.target.value ? value : undefined);
                       }
                     }}
@@ -406,15 +500,10 @@ export function TransactionFilters({
             </div>
 
             <div className="flex justify-end space-x-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={handleResetFilters}
-              >
+              <Button variant="outline" onClick={handleResetFilters}>
                 Reset Filters
               </Button>
-              <Button onClick={handleApplyFilters}>
-                Apply Filters
-              </Button>
+              <Button onClick={handleApplyFilters}>Apply Filters</Button>
             </div>
           </CardContent>
         </Card>

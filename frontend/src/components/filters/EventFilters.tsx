@@ -1,20 +1,21 @@
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Filter, X } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/select";
+import { Filter, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useSearchParams } from "react-router-dom";
 
 export function EventFilters({
   onFilterChange,
-  filterMode
+  filterMode,
 }: {
   onFilterChange: (filters: {
     name?: string;
@@ -24,16 +25,116 @@ export function EventFilters({
     showFull?: boolean;
     published?: boolean;
   }) => void;
-  filterMode: "partial" | "all" // partial: user, cashier; all: manager, superuser
+  filterMode: "partial" | "all"; // partial: user, cashier; all: manager, superuser
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [name, setName] = useState<string>('');
-  const [location, setLocation] = useState<string>('');
-  const [started, setStarted] = useState<boolean | undefined>(undefined);
-  const [ended, setEnded] = useState<boolean | undefined>(undefined);
-  const [showFull, setShowFull] = useState<boolean>(false);
-  // New state for "all" filter mode
-  const [published, setPublished] = useState<boolean | undefined>(undefined);
+
+  // Initialize state from URL query parameters
+  const [name, setName] = useState<string>(searchParams.get("name") || "");
+  const [location, setLocation] = useState<string>(
+    searchParams.get("location") || ""
+  );
+  const [started, setStarted] = useState<boolean | undefined>(
+    searchParams.has("started")
+      ? searchParams.get("started") === "true"
+      : undefined
+  );
+  const [ended, setEnded] = useState<boolean | undefined>(
+    searchParams.has("ended") ? searchParams.get("ended") === "true" : undefined
+  );
+  const [showFull, setShowFull] = useState<boolean>(
+    searchParams.get("showFull") === "true"
+  );
+  const [published, setPublished] = useState<boolean | undefined>(
+    searchParams.has("published")
+      ? searchParams.get("published") === "true"
+      : undefined
+  );
+
+  // Initialize filters on component mount
+  useEffect(() => {
+    // Only apply filters from URL on initial load if there are any params
+    if (searchParams.toString()) {
+      const initialFilters: {
+        name?: string;
+        location?: string;
+        started?: boolean;
+        ended?: boolean;
+        showFull?: boolean;
+        published?: boolean;
+      } = {};
+
+      if (searchParams.has("name")) {
+        initialFilters.name = searchParams.get("name") || undefined;
+      }
+
+      if (searchParams.has("location")) {
+        initialFilters.location = searchParams.get("location") || undefined;
+      }
+
+      if (searchParams.has("started")) {
+        initialFilters.started = searchParams.get("started") === "true";
+      }
+
+      if (searchParams.has("ended")) {
+        initialFilters.ended = searchParams.get("ended") === "true";
+      }
+
+      if (searchParams.has("showFull")) {
+        initialFilters.showFull = searchParams.get("showFull") === "true";
+      }
+
+      if (filterMode === "all" && searchParams.has("published")) {
+        initialFilters.published = searchParams.get("published") === "true";
+      }
+
+      // Notify parent component of initial filters
+      onFilterChange(initialFilters);
+
+      // If there are any filters in the URL, expand the filter panel
+      if (Object.keys(initialFilters).length > 0) {
+        setIsExpanded(true);
+      }
+    }
+  }, []);
+
+  const updateSearchParams = (filters: {
+    name?: string;
+    location?: string;
+    started?: boolean;
+    ended?: boolean;
+    showFull?: boolean;
+    published?: boolean;
+  }) => {
+    const newSearchParams = new URLSearchParams();
+
+    if (filters.name) {
+      newSearchParams.set("name", filters.name);
+    }
+
+    if (filters.location) {
+      newSearchParams.set("location", filters.location);
+    }
+
+    if (filters.started !== undefined) {
+      newSearchParams.set("started", String(filters.started));
+    }
+
+    if (filters.ended !== undefined) {
+      newSearchParams.set("ended", String(filters.ended));
+    }
+
+    if (filters.showFull) {
+      newSearchParams.set("showFull", String(filters.showFull));
+    }
+
+    if (filterMode === "all" && filters.published !== undefined) {
+      newSearchParams.set("published", String(filters.published));
+    }
+
+    setSearchParams(newSearchParams);
+  };
 
   const handleApplyFilters = () => {
     const filters: {
@@ -48,7 +149,7 @@ export function EventFilters({
       location: location || undefined,
       started,
       ended,
-      showFull: showFull || undefined
+      showFull: showFull || undefined,
     };
 
     // Add published filter for "all" mode
@@ -56,21 +157,73 @@ export function EventFilters({
       filters.published = published;
     }
 
+    // Update URL query parameters
+    updateSearchParams(filters);
+
+    // Notify parent component
     onFilterChange(filters);
   };
 
   const handleResetFilters = () => {
-    setName('');
-    setLocation('');
+    setName("");
+    setLocation("");
     setStarted(undefined);
     setEnded(undefined);
     setShowFull(false);
     setPublished(undefined);
+
+    // Clear URL query parameters
+    setSearchParams(new URLSearchParams());
+
+    // Notify parent component
     onFilterChange({});
   };
 
+  const handleRemoveFilter = (filterName: string) => {
+    const newFilters: {
+      name?: string;
+      location?: string;
+      started?: boolean;
+      ended?: boolean;
+      showFull?: boolean;
+      published?: boolean;
+    } = {
+      name: name || undefined,
+      location: location || undefined,
+      started,
+      ended,
+      showFull: showFull || undefined,
+    };
+
+    if (filterMode === "all") {
+      newFilters.published = published;
+    }
+
+    // Remove the specified filter
+    delete newFilters[filterName as keyof typeof newFilters];
+
+    // Update component state based on the filter being removed
+    if (filterName === "name") setName("");
+    if (filterName === "location") setLocation("");
+    if (filterName === "started") setStarted(undefined);
+    if (filterName === "ended") setEnded(undefined);
+    if (filterName === "showFull") setShowFull(false);
+    if (filterName === "published") setPublished(undefined);
+
+    // Update URL query parameters
+    updateSearchParams(newFilters);
+
+    // Notify parent component
+    onFilterChange(newFilters);
+  };
+
   const hasActiveFilters = () => {
-    const baseFilters = name || location || started !== undefined || ended !== undefined || showFull;
+    const baseFilters =
+      name ||
+      location ||
+      started !== undefined ||
+      ended !== undefined ||
+      showFull;
     const advancedFilters = filterMode === "all" && published !== undefined;
     return baseFilters || advancedFilters;
   };
@@ -94,19 +247,7 @@ export function EventFilters({
                 Name: {name}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setName('');
-                    onFilterChange({
-                      ...{
-                        location: location || undefined,
-                        started,
-                        ended,
-                        showFull: showFull || undefined,
-                        ...(filterMode === "all" && { published })
-                      },
-                      name: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("name")}
                 />
               </div>
             )}
@@ -115,61 +256,25 @@ export function EventFilters({
                 Location: {location}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setLocation('');
-                    onFilterChange({
-                      ...{
-                        name: name || undefined,
-                        started,
-                        ended,
-                        showFull: showFull || undefined,
-                        ...(filterMode === "all" && { published })
-                      },
-                      location: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("location")}
                 />
               </div>
             )}
             {started !== undefined && (
               <div className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Started: {started ? 'Yes' : 'No'}
+                Started: {started ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setStarted(undefined);
-                    onFilterChange({
-                      ...{
-                        name: name || undefined,
-                        location: location || undefined,
-                        ended,
-                        showFull: showFull || undefined,
-                        ...(filterMode === "all" && { published })
-                      },
-                      started: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("started")}
                 />
               </div>
             )}
             {ended !== undefined && (
               <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Ended: {ended ? 'Yes' : 'No'}
+                Ended: {ended ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setEnded(undefined);
-                    onFilterChange({
-                      ...{
-                        name: name || undefined,
-                        location: location || undefined,
-                        started,
-                        showFull: showFull || undefined,
-                        ...(filterMode === "all" && { published })
-                      },
-                      ended: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("ended")}
                 />
               </div>
             )}
@@ -178,41 +283,17 @@ export function EventFilters({
                 Show Full Events
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setShowFull(false);
-                    onFilterChange({
-                      ...{
-                        name: name || undefined,
-                        location: location || undefined,
-                        started,
-                        ended,
-                        ...(filterMode === "all" && { published })
-                      },
-                      showFull: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("showFull")}
                 />
               </div>
             )}
             {/* New filter chip for published filter */}
             {filterMode === "all" && published !== undefined && (
               <div className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs flex items-center">
-                Published: {published ? 'Yes' : 'No'}
+                Published: {published ? "Yes" : "No"}
                 <X
                   className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={() => {
-                    setPublished(undefined);
-                    onFilterChange({
-                      ...{
-                        name: name || undefined,
-                        location: location || undefined,
-                        started,
-                        ended,
-                        showFull: showFull || undefined
-                      },
-                      published: undefined
-                    });
-                  }}
+                  onClick={() => handleRemoveFilter("published")}
                 />
               </div>
             )}
@@ -256,9 +337,11 @@ export function EventFilters({
                 </label>
                 <div className="flex space-x-2">
                   <Select
-                    value={started === undefined ? 'all' : String(started)}
+                    value={started === undefined ? "all" : String(started)}
                     onValueChange={(value) => {
-                      setStarted(value === 'all' ? undefined : value === 'true');
+                      setStarted(
+                        value === "all" ? undefined : value === "true"
+                      );
                     }}
                   >
                     <SelectTrigger>
@@ -279,9 +362,9 @@ export function EventFilters({
                 </label>
                 <div className="flex space-x-2">
                   <Select
-                    value={ended === undefined ? 'all' : String(ended)}
+                    value={ended === undefined ? "all" : String(ended)}
                     onValueChange={(value) => {
-                      setEnded(value === 'all' ? undefined : value === 'true');
+                      setEnded(value === "all" ? undefined : value === "true");
                     }}
                   >
                     <SelectTrigger>
@@ -303,7 +386,10 @@ export function EventFilters({
                     checked={showFull}
                     onCheckedChange={setShowFull}
                   />
-                  <Label htmlFor="show-full" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="show-full"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Include Full Events
                   </Label>
                 </div>
@@ -317,9 +403,13 @@ export function EventFilters({
                   </label>
                   <div className="flex space-x-2">
                     <Select
-                      value={published === undefined ? 'all' : String(published)}
+                      value={
+                        published === undefined ? "all" : String(published)
+                      }
                       onValueChange={(value) => {
-                        setPublished(value === 'all' ? undefined : value === 'true');
+                        setPublished(
+                          value === "all" ? undefined : value === "true"
+                        );
                       }}
                     >
                       <SelectTrigger>
@@ -337,15 +427,10 @@ export function EventFilters({
             </div>
 
             <div className="flex justify-end space-x-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={handleResetFilters}
-              >
+              <Button variant="outline" onClick={handleResetFilters}>
                 Reset Filters
               </Button>
-              <Button onClick={handleApplyFilters}>
-                Apply Filters
-              </Button>
+              <Button onClick={handleApplyFilters}>Apply Filters</Button>
             </div>
           </CardContent>
         </Card>
