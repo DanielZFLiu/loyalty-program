@@ -101,7 +101,7 @@ export function PromotionEditForm({
     // Validate based on type
     if (formData.type === "automatic") {
       if (formData.rate !== undefined && formData.rate <= 0) {
-        return "Rate multiplier must be greater than zero";
+        return "Rate must be greater than zero";
       }
       if (formData.minSpending !== undefined && formData.minSpending < 0) {
         return "Minimum spending cannot be negative";
@@ -237,7 +237,7 @@ export function PromotionEditForm({
             </Select>
             <p className="text-sm text-gray-500">
               {formData.type === "automatic"
-                ? "Automatic promotions apply a rate multiplier to points earned from purchases"
+                ? "Automatic promotions apply a rate to points earned from purchases"
                 : "One-time promotions award a fixed number of points"}
             </p>
           </div>
@@ -307,7 +307,7 @@ export function PromotionEditForm({
                   step="0.1"
                   value={formData.rate === undefined ? "" : formData.rate}
                   onChange={handleNumberChange}
-                  placeholder="Points multiplier (e.g., 2 for 2x)"
+                  placeholder="Rate of of x cent(s) per point"
                   required={formData.type === "automatic"}
                 />
               </div>
