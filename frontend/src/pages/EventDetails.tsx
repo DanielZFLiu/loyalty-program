@@ -81,7 +81,7 @@ export function EventDetails() {
 
       try {
         // Check if user is manager
-        await checkManagerStatus();
+        const isManagerResult = await checkManagerStatus();
 
         // Fetch event details
         const response = await getEvent(Number(eventId));
@@ -98,10 +98,13 @@ export function EventDetails() {
           return;
         }
 
-        // Determine if user has manager-level access (either manager or organizer)
-        const managerAccess = isManager || checkOrganizerStatus(response);
-        setHasManagerAccess(managerAccess);
+        // Determine if user is an organizer
+        const isOrganizerResult = checkOrganizerStatus(response);
 
+        // Determine if user has manager-level access (either manager or organizer)
+        const managerAccess = isManagerResult || isOrganizerResult;
+        setHasManagerAccess(managerAccess);
+        
         // If the user doesn't have manager access, check the RSVP status
         if (!managerAccess) {
           await checkRsvpStatus();
@@ -280,7 +283,6 @@ export function EventDetails() {
             event={event}
             isManager={isManager}
             isOrganizer={isOrganizer}
-            hasManagerAccess={hasManagerAccess}
             rsvpStatus={rsvpStatus}
             rsvpLoading={rsvpLoading}
             isEventFull={isEventFull}

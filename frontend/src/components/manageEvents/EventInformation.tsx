@@ -184,9 +184,8 @@ export function EventInformation({
           Back to Events
         </Button>
 
-        {(isManager || isOrganizer) &&
-          !isEventEnded &&
-          (rsvpStatus ? (
+        {!isEventEnded && (
+          rsvpStatus ? (
             <Button
               variant="destructive"
               onClick={handleCancelRsvp}
@@ -205,7 +204,8 @@ export function EventInformation({
                 ? "Event Full"
                 : "RSVP to Event"}
             </Button>
-          ))}
+          )
+        )}
       </div>
     </>
   );
