@@ -39,6 +39,7 @@ export interface ListUsersResponse {
 
 // User Interfaces
 export interface User {
+    suspicious: boolean;
     id: number;
     utorid: string;
     name: string;

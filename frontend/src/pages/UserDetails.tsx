@@ -18,7 +18,7 @@ import {
 import { checkRole } from "@/lib/api/util";
 import { UserEditForm } from "@/components/manageUsers/UserEditForm";
 import { API_BASE_URL } from "@/lib/api/fetchWrapper";
-import { Shield, UserCheck, UserX, Calendar, Mail, Clock } from "lucide-react";
+import { Shield, UserCheck, UserX, Calendar, Mail, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -70,10 +70,19 @@ export function UserDetails() {
   const handleUpdate = async (data: UpdateUserInput) => {
     setError(null);
     setStatusMessage(null);
-
+  
     try {
       const updatedUser = await updateUser(Number(userId), data);
-      setUser((prev) => (prev ? { ...prev, ...updatedUser } : null));
+      
+      setUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...updatedUser,
+          suspicious: data.suspicious !== undefined ? data.suspicious : prev.suspicious
+        };
+      });
+      
       setEditMode(false);
       setStatusMessage("User updated successfully!");
     } catch (error) {
@@ -219,6 +228,13 @@ export function UserDetails() {
                           innerChild={<UserX className="h-3.5 w-3.5 mr-1" />}
                         ></Badge>
                       ))}
+                      {user.suspicious !== undefined && user.suspicious && (
+                        <Badge
+                          classes="bg-red-100 text-red-800 border-red-200"
+                          text="Suspicious"
+                          innerChild={<AlertCircle className="h-3.5 w-3.5 mr-1" />}
+                        ></Badge>
+                      )}
                   </div>
 
                   <div className="text-lg font-semibold text-blue-600 mb-4">

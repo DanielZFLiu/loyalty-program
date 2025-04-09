@@ -24,9 +24,9 @@ export function UserEditForm({ user, onUpdate, onCancel }: UserEditFormProps) {
     email: user.email || "",
     role: user.role || "regular",
     verified: user.verified || false,
-    suspicious: false,
+    suspicious: user.suspicious || false, // Initialize from the user object
   });
-
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
