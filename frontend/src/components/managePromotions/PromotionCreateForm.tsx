@@ -94,7 +94,7 @@ export function PromotionCreateForm({
     // Validate based on type
     if (formData.type === "automatic") {
       if (!formData.rate) {
-        return "Rate multiplier is required for automatic promotions";
+        return "Promotional rate is required for automatic promotions";
       }
       if (formData.minSpending === undefined) {
         return "Minimum spending amount is required for automatic promotions";
@@ -207,7 +207,7 @@ export function PromotionCreateForm({
             </Select>
             <p className="text-sm text-gray-500">
               {formData.type === "automatic"
-                ? "Automatic promotions apply a rate multiplier to points earned from purchases"
+                ? "Automatic promotions apply a promotional rate to points earned from purchases"
                 : "One-time promotions award a fixed number of points"}
             </p>
           </div>
@@ -268,7 +268,7 @@ export function PromotionCreateForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="rate">Rate Multiplier*</Label>
+                <Label htmlFor="rate">Promotional Rate*</Label>
                 <Input
                   id="rate"
                   name="rate"
@@ -277,7 +277,7 @@ export function PromotionCreateForm({
                   step="0.1"
                   value={formData.rate === undefined ? "" : formData.rate}
                   onChange={handleNumberChange}
-                  placeholder="Points multiplier (e.g., 2 for 2x)"
+                  placeholder="rate of 1 cent per point redeemed"
                   required={formData.type === "automatic"}
                 />
               </div>

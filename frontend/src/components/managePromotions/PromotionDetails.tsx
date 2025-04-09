@@ -287,11 +287,11 @@ export function PromotionDetails() {
                 <>
                   <div>
                     <h4 className="text-sm font-medium text-gray-500">
-                      Rate Multiplier
+                      Promotional Rate
                     </h4>
                     <p className="text-md text-green-600 font-semibold">
                       {promotion.rate
-                        ? `${promotion.rate}x points`
+                        ? `${promotion.rate} cent(s) per point`
                         : "No rate specified"}
                     </p>
                   </div>
