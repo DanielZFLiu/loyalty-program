@@ -80,8 +80,8 @@ export function Profile() {
   const validatePassword = (password: string): boolean => {
     // 8-20 characters, at least one uppercase, one lowercase, one number, one special character
     const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,20}$/;
-    return passwordRegex.test(password);
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]).{8,20}$/;
+      return passwordRegex.test(password);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,7 +126,8 @@ export function Profile() {
       setPasswordError("New passwords don't match");
       return;
     }
-
+    console.log(passwordData.new);
+    console.log(validatePassword(passwordData.new));
     if (!validatePassword(passwordData.new)) {
       setPasswordError(
         "Password must be 8-20 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character"

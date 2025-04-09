@@ -150,9 +150,14 @@ async function updatePassword(req, res) {
     if (typeof newPassword !== 'string' || newPassword.length < 8 || newPassword.length > 20) {
         return res.status(400).json({ error: 'new password must be between 8 and 20 characters' });
     }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(newPassword)) {
-        return res.status(400).json({ error: 'new password must include at least one uppercase letter, one lowercase letter, one number, and one special character' });
-    }
+    if (
+        !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])/.test(newPassword)
+      ) {
+        return res.status(400).json({
+          error:
+            'new password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
+        });
+      }
     try {
         // retrieve current user record
         const user = await prisma.user.findUnique({ where: { id: req.user.id } });

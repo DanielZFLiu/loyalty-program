@@ -110,7 +110,7 @@ export function UserRegistration() {
         ? "Password must contain at least one lowercase letter"
         : !/(?=.*\d)/.test(formData.password)
         ? "Password must contain at least one number"
-        : !/(?=.*[!@#$%^&*])/.test(formData.password)
+        : !/(?=.*[!"#$%&'()*+,\-./:;<=>?@$begin:math:display$\\\\$end:math:display$^_`{|}~])/.test(formData.password)
         ? "Password must contain at least one special character"
         : "",
       confirmPassword:
