@@ -1,4 +1,5 @@
 import { fetchWrapper } from './fetchWrapper';
+import { ResponseFields } from './fetchWrapper';
 
 /* ================================
    TypeScript Interfaces
@@ -90,7 +91,7 @@ export interface UpdateUserResponse {
  * @param data - { utorid, name, email }
  * @returns A promise resolving to the new user's details.
  */
-export async function registerUser(data: RegisterUserInput): Promise<RegisterUserResponse> {
+export async function registerUser(data: RegisterUserInput): Promise<RegisterUserResponse & ResponseFields> {
     return await fetchWrapper("/users", {
         method: "POST",
         body: JSON.stringify(data),
