@@ -17,14 +17,16 @@ import { UserCheck } from "lucide-react";
 
 interface EventUserManagementProps {
   event: Event;
+  isManager: boolean;
   onSuccess: () => void;
 }
 
 export function EventUserManagement({
   event,
+  isManager,
   onSuccess,
 }: EventUserManagementProps) {
-  const [activeTab, setActiveTab] = useState("organizers");
+  const [activeTab, setActiveTab] = useState(isManager ? "organizers" : "guests");
   const [organizerUtorid, setOrganizerUtorid] = useState("");
   const [guestUtorid, setGuestUtorid] = useState("");
   const [loading, setLoading] = useState(false);
@@ -96,6 +98,13 @@ export function EventUserManagement({
     setSuccess(null);
 
     try {
+      // Check if user is a manager (only managers can remove guests)
+      if (!isManager) {
+        setError("Only managers can remove guests from events.");
+        setLoading(false);
+        return;
+      }
+
       await removeEventGuest(event.id, userId);
       setSuccess("Successfully removed guest");
       onSuccess();
@@ -151,34 +160,41 @@ export function EventUserManagement({
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="organizers">Organizers</TabsTrigger>
-            <TabsTrigger value="guests">Guests</TabsTrigger>
-          </TabsList>
+          {isManager && (
+            <TabsList className="grid grid-cols-2">
+              <TabsTrigger value="organizers">Organizers</TabsTrigger>
+              <TabsTrigger value="guests">Guests</TabsTrigger>
+            </TabsList>
+          )}
 
-          <TabsContent value="organizers" className="space-y-4">
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <Label htmlFor="organizer-utorid" className="mt-3 mb-3">
-                  Add Organizer by UTORid
-                </Label>
-                <Input
-                  id="organizer-utorid"
-                  value={organizerUtorid}
-                  onChange={(e) => setOrganizerUtorid(e.target.value)}
-                  placeholder="Enter UTORid"
-                  disabled={loading}
-                />
+            <TabsContent value="organizers" className="space-y-4">
+            {isManager ? (
+              <div className="flex flex-col space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="organizer-utorid">Add Organizer (UTORid)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="organizer-utorid"
+                      value={organizerUtorid}
+                      onChange={(e) => setOrganizerUtorid(e.target.value)}
+                      placeholder="Enter UTORid"
+                      disabled={loading}
+                    />
+                    <Button
+                      onClick={handleAddOrganizer}
+                      disabled={!organizerUtorid.trim() || loading}
+                    >
+                      <UserCheck className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <Button
-                onClick={handleAddOrganizer}
-                disabled={loading || !organizerUtorid.trim()}
-              >
-                Add
-              </Button>
-            </div>
-
-            <div className="mt-4">
+            ) : (
+              <div className="p-4 text-center text-gray-500">
+                Only managers can add organizers to events.
+              </div>
+            )}            <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Current Organizers</h4>
               {event.organizers && event.organizers.length > 0 ? (
                 <div className="space-y-2">
@@ -193,14 +209,16 @@ export function EventUserManagement({
                           {organizer.name} ({organizer.utorid})
                         </span>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveOrganizer(organizer.id)}
-                        disabled={loading}
-                      >
-                        Remove
-                      </Button>
+                      {isManager && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemoveOrganizer(organizer.id)}
+                          disabled={loading}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -251,14 +269,18 @@ export function EventUserManagement({
                         <UserCheck className="h-4 w-4 text-blue-600" />
                         <UserDetails id={guest.id} />
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveGuest(guest.id)}
-                        disabled={loading}
-                      >
-                        Remove
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {isManager && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveGuest(guest.id)}
+                            disabled={loading}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

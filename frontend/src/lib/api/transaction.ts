@@ -36,6 +36,7 @@ export interface TransactionSummary {
     remark: string;
     relatedId?: number;
     createdBy: string | null;
+    createdAt: Date;
 }
 
 export interface ListTransactionsResponse {

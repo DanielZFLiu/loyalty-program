@@ -160,30 +160,30 @@ export function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Points Balance Card */}
-      <Card className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white">
-    <CardContent className="p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Welcome, {profile?.name || "User"}
-          </h1>
-          <p className="text-indigo-100 mt-1">
-            Regular User Dashboard •{" "}
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
-          <div className="mt-4 md:mt-0 md:text-right">
-            <p className="text-indigo-100 text-sm">Points</p>
-            <p className="text-3xl font-bold">{profile?.points || 0}</p>
+      <Card className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
+        <CardContent className="pt-6 pb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div>
+              <h1 className="text-2xl font-bold">
+                Welcome, {profile?.name || "User"}
+              </h1>
+              <p className="text-blue-100 mt-1">
+                Regular User Dashboard •{" "}
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0 md:text-right">
+              <p className="text-blue-100 text-sm">Points</p>
+              <p className="text-3xl font-bold">{profile?.points || 0}</p>
+            </div>
           </div>
-      </div>
-    </CardContent>
-  </Card>
+        </CardContent>
+      </Card>
 
       {/* QR Code and Transfer Widget Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -269,7 +269,11 @@ export function Dashboard() {
           <div className="space-y-3">
             {recentTransactions?.length > 0 ? (
               recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="border rounded-lg p-3 flex justify-between items-center">
+                <Link 
+                  to={`/transactions/${transaction.id}`}
+                  key={transaction.id} 
+                  className="block border rounded-lg p-3 flex justify-between items-center hover:bg-gray-100"
+                >
                   <div>
                     <div className="flex items-center space-x-2">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getTransactionColor(transaction.type)}`}>
@@ -283,7 +287,7 @@ export function Dashboard() {
                   <p className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {transaction.amount >= 0 ? '+' : ''}{transaction.amount}
                   </p>
-                </div>
+                </Link>
               ))
             ) : (
               <p className="text-gray-500 text-center py-4">No recent transactions</p>

@@ -8,6 +8,7 @@ import { type Event, getEvent } from "@/lib/api/event";
 interface EventInformationProps {
   event: Event;
   isManager: boolean;
+  isOrganizer: boolean;
   rsvpStatus: boolean;
   rsvpLoading: boolean;
   isEventFull: boolean;
@@ -27,6 +28,7 @@ interface EventInformationProps {
 export function EventInformation({
   event,
   isManager,
+  isOrganizer,
   rsvpStatus,
   rsvpLoading,
   isEventFull,
@@ -58,7 +60,7 @@ export function EventInformation({
           )}
         </div>
 
-        {isManager && (
+        {(isManager || isOrganizer) && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -69,15 +71,17 @@ export function EventInformation({
               <PencilIcon className="h-4 w-4" />
               Edit
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
-              <Trash2Icon className="h-4 w-4" />
-              Delete
-            </Button>
+            {isManager && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2Icon className="h-4 w-4" />
+                Delete
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -110,7 +114,7 @@ export function EventInformation({
             </p>
           </div>
 
-          {isManager && (
+          {(isManager || isOrganizer) && (
             <div>
               <h4 className="text-sm font-medium text-gray-500">Points</h4>
               <p className="text-md">
@@ -142,7 +146,7 @@ export function EventInformation({
       </div>
 
       {/* Manager Actions Section */}
-      {isManager && (
+      {(isManager || isOrganizer) && (
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Manager Actions</h3>
@@ -161,6 +165,7 @@ export function EventInformation({
           {/* User Management */}
           <EventUserManagement
             event={event}
+            isManager={isManager}
             onSuccess={async () => {
               // Reload event details
               try {
@@ -179,7 +184,7 @@ export function EventInformation({
           Back to Events
         </Button>
 
-        {!isManager &&
+        {(isManager || isOrganizer) &&
           !isEventEnded &&
           (rsvpStatus ? (
             <Button

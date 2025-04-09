@@ -41,6 +41,8 @@ export function EventEditForm({
     published: event.published || false,
   });
 
+  const [changedFields, setChangedFields] = useState<Set<string>>(new Set());
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +66,8 @@ export function EventEditForm({
       ...prev,
       [name]: value,
     }));
+    
+    setChangedFields(prev => new Set(prev).add(name));
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,6 +76,8 @@ export function EventEditForm({
       ...prev,
       [name]: value === "" ? null : parseInt(value),
     }));
+    
+    setChangedFields(prev => new Set(prev).add(name));
   };
 
   const handleSwitchChange = (checked: boolean) => {
@@ -79,6 +85,8 @@ export function EventEditForm({
       ...prev,
       published: checked,
     }));
+    
+    setChangedFields(prev => new Set(prev).add('published'));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,16 +95,48 @@ export function EventEditForm({
     setError(null);
 
     try {
-      // Convert dates to ISO strings if they're not already
-      const payload = {
-        ...formData,
-        startTime: formData.startTime
-          ? new Date(formData.startTime).toISOString()
-          : undefined,
-        endTime: formData.endTime
-          ? new Date(formData.endTime).toISOString()
-          : undefined,
-      };
+      const changedData = {} as Record<string, any>;
+      
+      changedFields.forEach(field => {
+        if (field in formData) {
+          const key = field as keyof UpdateEventPayload;
+          changedData[key] = formData[key];
+        }
+      });
+      
+      if (Object.keys(changedData).length === 0) {
+        onCancel();
+        return;
+      }
+      
+      const payload: Partial<UpdateEventPayload> = {};
+      
+      if ('name' in changedData) {
+        payload.name = changedData.name as string;
+      }
+      if ('description' in changedData) {
+        payload.description = changedData.description as string;
+      }
+      if ('location' in changedData) {
+        payload.location = changedData.location as string;
+      }
+      if ('capacity' in changedData) {
+        payload.capacity = changedData.capacity === '' ? null : (changedData.capacity as number);
+      }
+      if ('points' in changedData) {
+        payload.points = changedData.points as number;
+      }
+      if ('published' in changedData) {
+        payload.published = changedData.published as boolean;
+      }
+      
+      if ('startTime' in changedData && changedData.startTime) {
+        payload.startTime = new Date(changedData.startTime as string).toISOString();
+      }
+      
+      if ('endTime' in changedData && changedData.endTime) {
+        payload.endTime = new Date(changedData.endTime as string).toISOString();
+      }
 
       const response = await updateEvent(event.id, payload);
 

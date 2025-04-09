@@ -81,6 +81,7 @@ export function ManagerDashboard() {
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [isSuperuser, setIsSuperuser] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [transactionSummary, setTransactionSummary] = useState<
     Record<string, number>
   >({});
@@ -97,7 +98,31 @@ export function ManagerDashboard() {
         console.error("Error loading dashboard data:", err);
         setLoading(false);
       });
+      
+    // Update time every minute
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    
+    return () => clearInterval(timer);
   }, []);
+  
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   const fetchProfile = async () => {
     try {
@@ -197,7 +222,7 @@ export function ManagerDashboard() {
             amount: t.amount,
             suspicious: t.suspicious,
             createdBy: t.createdBy,
-            timestamp: new Date().toISOString(), // Would come from transaction in a real app
+            timestamp: t.createdAt,
           };
         })
       );
@@ -281,9 +306,11 @@ export function ManagerDashboard() {
     }
   };
 
-  const getRecentActivityTime = (timestamp: string) => {
+  const getRecentActivityTime = (timestamp: Date) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -301,22 +328,20 @@ export function ManagerDashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Welcome Header */}
-      <Card className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white">
-        <CardContent className="p-6">
+      <Card className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
+        <CardContent className="pt-6 pb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
               <h1 className="text-2xl font-bold">
                 Welcome, {profile?.name || "Manager"}
               </h1>
-              <p className="text-indigo-100 mt-1">
-                {isSuperuser ? "Superuser Dashboard" : "Manager Dashboard"} •{" "}
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+              <p className="text-blue-100 mt-1">
+                {isSuperuser ? "Superuser Dashboard" : "Manager Dashboard"}
               </p>
+            </div>
+            <div className="text-right mt-2 md:mt-0">
+              <p className="text-2xl font-medium text-white">{formatTime(currentTime)}</p>
+              <p className="text-blue-100">{formatDate(currentTime)}</p>
             </div>
           </div>
         </CardContent>
@@ -325,7 +350,7 @@ export function ManagerDashboard() {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {getQuickStats().map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
+          <Card key={index} className="h-full transition-all duration-300 hover:shadow-md hover:border-blue-300 overflow-hidden">
             <Link to={stat.link}>
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
@@ -453,7 +478,7 @@ export function ManagerDashboard() {
                 <TabsTrigger value="suspicious">
                   Suspicious{" "}
                   <span className="ml-1 bg-red-100 text-red-800 px-1.5 py-0.5 rounded-full text-xs">
-                    {stats.suspiciousTransactions}
+                    {recentActivity.filter(activity => activity.suspicious).length}
                   </span>
                 </TabsTrigger>
               </TabsList>
