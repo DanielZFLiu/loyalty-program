@@ -59,6 +59,7 @@ export function EventActionDialogs({
   const [pointsLoading, setPointsLoading] = useState(false);
   const [specificUser, setSpecificUser] = useState<string>("");
   const [awardAll, setAwardAll] = useState(true);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
   const handleEditSuccess = async () => {
     setEditDialogOpen(false);
@@ -105,34 +106,42 @@ export function EventActionDialogs({
 
   const handleAwardPoints = async () => {
     setPointsLoading(true);
-
+    // Create a state variable for the error message  
     if (pointsAmount <= 0) {
-      onError("Points amount must be greater than zero.");
+      setDialogError("Points amount must be greater than zero.");
       setPointsLoading(false);
       return;
     }
-
+  
     try {
       const payload: EventTransactionPayload = {
         type: "event",
         amount: pointsAmount,
         remark: pointsRemark || undefined,
       };
-
+  
       // If not awarding to all, include the specific user's utorid
       if (!awardAll && specificUser.trim()) {
         payload.utorid = specificUser.trim();
       }
-
-      await createEventTransaction(eventId, payload);
-
+  
+      const response = await createEventTransaction(eventId, payload);
+      
+      // Check if the response contains an error
+      if (response.error) {
+        setDialogError(response.error);
+        setPointsLoading(false);
+        return;
+      }
+  
       // Reload event details to get updated points
-      const response = await getEvent(eventId);
-      setEvent(response);
-
+      const updatedEvent = await getEvent(eventId);
+      setEvent(updatedEvent);
+  
+      setDialogError(null); // Clear any errors
       setPointsDialogOpen(false);
       onSuccess(`Points awarded successfully!`);
-
+  
       // Reset form
       setPointsAmount(0);
       setPointsRemark("");
@@ -140,7 +149,11 @@ export function EventActionDialogs({
       setAwardAll(true);
     } catch (error) {
       console.error("Error awarding points:", error);
-      onError("Failed to award points. Please try again.");
+      if (error instanceof Error && error.message.includes("not enough remaining points")) {
+        setDialogError("Not enough remaining points to complete this transaction.");
+      } else {
+        setDialogError("Failed to award points. Please try again.");
+      }
     } finally {
       setPointsLoading(false);
     }
@@ -150,7 +163,8 @@ export function EventActionDialogs({
     <>
       {/* Edit Event Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[700px]">            
+          <DialogTitle>Edit Event</DialogTitle>
           <EventEditForm
             event={event}
             onSuccess={handleEditSuccess}
@@ -189,13 +203,26 @@ export function EventActionDialogs({
       </Dialog>
 
       {/* Award Points Dialog */}
-      <Dialog open={pointsDialogOpen} onOpenChange={setPointsDialogOpen}>
+      <Dialog 
+        open={pointsDialogOpen} 
+        onOpenChange={(open) => {
+          setPointsDialogOpen(open);
+          if (!open) setDialogError(null); // Clear error when dialog is closed
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Award Points</DialogTitle>
             <DialogDescription>
               Award points to participants of this event.
             </DialogDescription>
+            
+            {/* Error display inside dialog header */}
+            {dialogError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+                {dialogError}
+              </div>
+            )}
           </DialogHeader>
 
           <div className="space-y-4 py-4">

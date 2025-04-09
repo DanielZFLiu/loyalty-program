@@ -58,17 +58,16 @@ export function EventCreateForm({ onSuccess, onCancel }: EventCreateFormProps) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
+  
     try {
-      // Convert dates to ISO strings if they're not already
       const payload = {
         ...formData,
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
       };
-
+  
       const response = await createEvent(payload);
-
+  
       if (response.id) {
         if (onSuccess) {
           onSuccess(response.id);
@@ -76,18 +75,37 @@ export function EventCreateForm({ onSuccess, onCancel }: EventCreateFormProps) {
           navigate(`/events/${response.id}`);
         }
       } else {
-        setError(
-          "Failed to create event. Please check your information and try again."
-        );
+        if (response.error && typeof response.error === 'string') {
+          setError(response.error);
+        } else {
+          setError("Failed to create event. Please check your information and try again.");
+        }
       }
     } catch (err) {
       console.error("Error creating event:", err);
+      
+      // Extract error message if available
+      let errorMessage = "";
+      
+      if (typeof err === 'object' && err !== null && 'message' in err) {
+        errorMessage = err.message;
+        
+        // Check for the specific pattern in the error message
+        if (typeof errorMessage === 'string' && errorMessage.includes('Request failed with status')) {
+          const match = errorMessage.match(/Request failed with status \d+: (.*)/);
+          if (match && match[1]) {
+            setError(match[1]);
+            return;
+          }
+        }
+      }
+      
+      // If we couldn't extract a specific error message, use the default
       setError("An error occurred while creating the event. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -191,7 +209,7 @@ export function EventCreateForm({ onSuccess, onCancel }: EventCreateFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description*</Label>
             <Textarea
               id="description"
               name="description"
