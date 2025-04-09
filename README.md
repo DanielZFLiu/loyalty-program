@@ -7,6 +7,8 @@ This is a generic loyalty program implemented with the following stack:
 
 The goal of this course project is to familiarize ourselves with the above stack, as well as the process of designing/implementing from the grounds up.
 
+The code here was hosted on GitHub and then uploaded to Markus. This is the repository: https://github.com/DanielZFLiu/loyalty-program.git
+
 Notice: due to usage of shadcn ui, code within src/components/ui were not written by us.
 
 To run the project locally, you have to separately initialize both backend and frontend. 
