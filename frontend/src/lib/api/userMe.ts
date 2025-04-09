@@ -44,6 +44,7 @@ export interface Transaction {
     promotionIds: number[];
     remark: string;
     createdBy: string | null;
+    processedBy: string | null;
     relatedId?: number;
 }
 

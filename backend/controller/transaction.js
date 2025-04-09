@@ -420,6 +420,7 @@ async function listTransactions(req, res) {
         include: {
           user: true,
           createdBy: true,
+          processedBy: true,
           transactionPromotions: { select: { promotionId: true } },
         },
         skip: skip,
@@ -437,6 +438,7 @@ async function listTransactions(req, res) {
       suspicious: tx.suspicious,
       remark: tx.remark,
       relatedId: tx.relatedId,
+      processedBy: tx.processedBy ? tx.processedBy.utorid : null,
       createdBy: tx.createdBy ? tx.createdBy.utorid : null,
       createdAt: tx.createdAt,
     }));
@@ -464,6 +466,7 @@ async function getTransaction(req, res) {
       include: {
         user: true,
         createdBy: true,
+        processedBy: true,
         transactionPromotions: { select: { promotionId: true } },
       },
     });
@@ -481,6 +484,7 @@ async function getTransaction(req, res) {
       remark: tx.remark || "",
       createdBy: tx.createdBy ? tx.createdBy.utorid : null,
       relatedId: tx.relatedId,
+      processedBy: tx.processedBy ? tx.processedBy.utorid : null,
       createdAt: tx.createdAt,
     });
   } catch (error) {

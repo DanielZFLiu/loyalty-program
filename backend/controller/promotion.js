@@ -130,7 +130,7 @@ async function getPromotions(req, res) {
     return res.status(400).json({ error: "limit must be a postive number" });
   }
   // check user clearance: managers (or higher) get extra filters
-  const managerRoles = ["MANAGER", "SUPERUSER"];
+  const managerRoles = ["CASHIER", "MANAGER", "SUPERUSER"];
   if (managerRoles.includes(req.user.role.toUpperCase())) {
     if (started != null && ended != null) {
       return res

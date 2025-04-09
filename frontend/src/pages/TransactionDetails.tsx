@@ -246,18 +246,35 @@ export function TransactionDetails() {
                 <h4 className="text-sm font-medium text-gray-500">Amount</h4>
                 <p
                   className={`text-lg font-semibold ${
-                    transaction.amount >= 0 ? "text-green-600" : "text-red-600"
+                    transaction.type.toUpperCase() === 'REDEMPTION' ? 
+                      "text-red-600" : 
+                      (transaction.amount >= 0 ? "text-green-600" : "text-red-600")
                   }`}
                 >
-                  {transaction.amount >= 0 ? "+" : ""}
-                  {transaction.amount} points
+                  {transaction.type.toUpperCase() === 'REDEMPTION' 
+                    ? "-" + Math.abs(transaction.amount)
+                    : (transaction.amount >= 0 ? "+" + transaction.amount : transaction.amount)
+                  } points
                 </p>
               </div>
 
-              {transaction.spent !== undefined && (
+              {transaction.spent !== undefined && transaction.type.toUpperCase() !== 'REDEMPTION' && (
                 <div>
                   <h4 className="text-sm font-medium text-gray-500">Spent</h4>
                   <p className="text-md">${transaction.spent?.toFixed(2)}</p>
+                </div>
+              )}
+              
+              {transaction.type.toUpperCase() === 'REDEMPTION' && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Status</h4>
+                  <p className="text-md">
+                    {transaction.processedBy ? (
+                      <span className="text-green-600 font-medium">Processed by {transaction.processedBy}</span>
+                    ) : (
+                      <span className="text-amber-600 font-medium">Pending</span>
+                    )}
+                  </p>
                 </div>
               )}
 

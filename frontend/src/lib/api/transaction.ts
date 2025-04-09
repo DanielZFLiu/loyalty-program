@@ -35,6 +35,7 @@ export interface TransactionSummary {
     suspicious: boolean;
     remark: string;
     relatedId?: number;
+    processedBy: string | null;
     createdBy: string | null;
     createdAt: Date;
 }

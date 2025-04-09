@@ -171,9 +171,7 @@ export function PromotionEditForm({
       onSuccess();
     } catch (err) {
       console.error("Error updating promotion:", err);
-      setError(
-        "An error occurred while updating the promotion. Please try again."
-      );
+      setError(`An error occurred while updating the promotion. ${err}`);
     } finally {
       setLoading(false);
     }

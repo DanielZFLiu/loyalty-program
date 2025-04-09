@@ -149,7 +149,7 @@ export function EventEditForm({
       }
     } catch (err) {
       console.error("Error updating event:", err);
-      setError("An error occurred while updating the event. Please try again.");
+      setError(`An error occurred while updating the event. Error: ${err}`);
     } finally {
       setLoading(false);
     }

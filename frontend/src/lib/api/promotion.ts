@@ -133,11 +133,16 @@ export async function updatePromotion(
     promotionId: number,
     payload: UpdatePromotionPayload
 ): Promise<Promotion> {
-    const updatedPromotion = await fetchWrapper(`/promotions/${promotionId}`, {
+    const response = await fetchWrapper(`/promotions/${promotionId}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
     });
-    return updatedPromotion;
+    
+    if ('error' in response) {
+        throw new Error(response.error || 'Failed to update promotion');
+    }
+    
+    return response;
 }
 
 /**

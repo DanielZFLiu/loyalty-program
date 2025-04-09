@@ -284,8 +284,11 @@ export function Dashboard() {
                       {transaction.remark || `${transaction.type} transaction`}
                     </p>
                   </div>
-                  <p className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {transaction.amount >= 0 ? '+' : ''}{transaction.amount}
+                  <p className={`font-semibold ${transaction.type.toUpperCase() === 'REDEMPTION' ? 'text-red-600' : (transaction.amount >= 0 ? 'text-green-600' : 'text-red-600')}`}>
+                    {transaction.type.toUpperCase() === 'REDEMPTION' 
+                      ? '-' + Math.abs(transaction.amount)
+                      : (transaction.amount >= 0 ? '+' + transaction.amount : transaction.amount)
+                    } points
                   </p>
                 </Link>
               ))

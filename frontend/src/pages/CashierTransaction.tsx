@@ -24,7 +24,7 @@ export default function CashierCreateTransaction() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   useEffect(() => {
     fetchPromotions();
   }, [autoPromotionPage, oneTimePromotionPage]);
@@ -36,17 +36,27 @@ export default function CashierCreateTransaction() {
         page: autoPromotionPage,
         limit: 10,
         type: 'automatic',
+        ended: false,
       });
       const oneTimeResponse = await getPromotions({
         page: oneTimePromotionPage,
         limit: 10,
         type: 'one-time',
+        ended: false,
       });
 
-      setAutoPromotions(autoResponse.results);
-      setOneTimePromotions(oneTimeResponse.results);
-      setTotalAutoPromotions(autoResponse.count);
-      setTotalOneTimePromotions(oneTimeResponse.count);
+      const now = new Date();
+      const activeAutoPromotions = autoResponse.results.filter(promo => 
+        promo.startTime && new Date(promo.startTime) <= now
+      );
+      const activeOneTimePromotions = oneTimeResponse.results.filter(promo => 
+        promo.startTime && new Date(promo.startTime) <= now
+      );
+
+      setAutoPromotions(activeAutoPromotions);
+      setTotalAutoPromotions(activeAutoPromotions.length); 
+      setOneTimePromotions(activeOneTimePromotions);
+      setTotalOneTimePromotions(activeOneTimePromotions.length); 
     } catch (error) {
       console.error('Failed to fetch promotions', error);
     } finally {

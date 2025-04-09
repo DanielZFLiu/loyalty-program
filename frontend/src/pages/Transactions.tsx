@@ -13,7 +13,7 @@ import {
   listTransactions,
   type ListTransactionsOptions,
 } from "@/lib/api/transaction";
-import { ChevronRight, AlertTriangle } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -159,12 +159,17 @@ export function Transactions() {
                         </span>
                       </div>
                       <div className="mt-2 space-y-1">
+                        {transaction.type.toUpperCase() !== 'REDEMPTION' && (
+                          <p className="text-sm text-gray-600">
+                            Amount spent: $
+                            {transaction.spent?.toFixed(2) || "0.00"}
+                          </p>
+                        )}
                         <p className="text-sm text-gray-600">
-                          Amount spent: $
-                          {transaction.spent?.toFixed(2) || "0.00"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Points accumulated: {transaction.amount} points
+                          {transaction.type.toUpperCase() === 'REDEMPTION' ? 
+                            'Points redeemed: ' + Math.abs(transaction.amount) + ' points' : 
+                            'Points accumulated: ' + transaction.amount + ' points'
+                          }
                         </p>
                         <p className="text-sm text-gray-600">
                           Remark: {transaction.remark || "No remark"}
@@ -172,19 +177,28 @@ export function Transactions() {
                         <p className="text-sm text-gray-600">
                           Created By: {transaction.createdBy || "Unknown"}
                         </p>
+                        {transaction.type.toUpperCase() === 'REDEMPTION' && (
+                          <p className="text-sm text-gray-600">
+                            Status: {transaction.processedBy ? 
+                              <span className="text-green-600 font-medium">Processed by {transaction.processedBy}</span> : 
+                              <span className="text-amber-600 font-medium">Pending</span>}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center">
                       <div className="text-right mr-3">
                         <p
                           className={`text-lg font-semibold ${
-                            transaction.amount >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                            transaction.type.toUpperCase() === 'REDEMPTION' ? 
+                              "text-red-600" : 
+                              (transaction.amount >= 0 ? "text-green-600" : "text-red-600")
                           }`}
                         >
-                          {transaction.amount >= 0 ? "+" : ""}
-                          {transaction.amount} points
+                          {transaction.type.toUpperCase() === 'REDEMPTION' 
+                            ? "-" + Math.abs(transaction.amount)
+                            : (transaction.amount >= 0 ? "+" + transaction.amount : transaction.amount)
+                          } points
                         </p>
                         <p className="text-xs text-gray-500">
                           Transaction #{transaction.id}
